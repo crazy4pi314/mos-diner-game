@@ -6,7 +6,8 @@ files, assets, menu builder, extension host, and tests; no files are loaded
 from the original repository. Original mockups and pull-request screenshots
 are not included.
 
-This repository is local only. No GitHub repository or remote is configured.
+This repository is hosted privately at
+https://github.com/crazy4pi314/mos-diner-game.
 Open this directory as a repository in Copilot so its project extension in
 `.github/extensions/mos-diner/` can be loaded.
 Changes to shared game files in either repository are independent; they are
@@ -20,7 +21,7 @@ The screen has three columns:
 - **Center: Copilot.** The conversation for the selected order: what the customer said, your prompt, and Copilot's plan.
 - **Right: the kitchen.** Every approved order cooks here as a PR stack, one PR at a time. When a stack is green, **Merge & serve** it.
 
-On phones you see one column at a time, with a Line / Copilot / Kitchen tab bar at the bottom.
+On phones you see one column at a time, with an Orders / Prep / Kitchen tab bar at the bottom.
 
 ## Copilot canvas
 
@@ -29,7 +30,16 @@ The Copilot CLI resolves its SDK automatically; no install or build is needed.
 The standalone site still opens directly from `index.html` or any static web host.
 
 Menu dishes, customer order phrases, recipe steps, and options live in
-`menu.json`. Set a dish or option's `enabled` field to `false` to remove it
+`menu.json`. The menu contains 15 dishes grouped into Appetizers, All Day
+Breakfast, Mains, Soup, and Dessert, with three recipe options per dish.
+The three shared **Secret Sauces** are defined once in `sauces` and offered
+on dishes with `sauces: true` (all non-dessert categories). They are optional
+side cups, not standalone orders. Selected sauces add preparation PRs;
+omitted sauces remain editable in plan review but do not add cooking work.
+Adding or removing a sauce on a returned order rebuilds only that sauce step.
+For Eggs your way, sunny-side approval changes the first egg and scramble
+the diff changes the second, so both options can be ordered together.
+Set a dish, recipe option, or shared sauce's `enabled` field to `false` to remove it
 from new shifts. After editing the JSON, refresh the direct-file fallback and reload the extension
 so the browser, server validator, and real-Copilot menu all use the same data:
 
@@ -210,7 +220,7 @@ Fulfill three orders exactly as requested within 90 seconds and you win a gift c
 ## How to play
 
 1. **Take the order.** Read what the customer asks for. The details matter.
-2. **Prompt Copilot.** Tap the dish and detail chips, or type it (`@copilot one merge melt, accept theirs`).
+2. **Prompt Copilot.** Choose a dish from its category, then tap detail and optional Secret Sauces chips, or type it (`@copilot one sandbox deli sandwich, rebase on rye`).
 3. **Review the plan.** Copilot lists one PR per step. Details from your prompt are tagged *you asked*; anything you left out is tagged *assumed* (the house default). Tap a step to change it, then **Approve plan**.
 4. **Merge & serve.** Copilot cooks the stack in the kitchen while you take the next order. When it's green, merge it and hand it over.
 
@@ -223,8 +233,9 @@ If time runs out before you fulfill three orders, restart and try again with a n
 
 - `index.html`: markup (two-pane shell, dialogs, certificate)
 - `styles.css`: Copilot app styles plus game UI
-- `orders.js`: the menu (`Menu.MENU`) and customers. Each dish has ordered `steps`, plus `opts` that each swap one step for a variation.
-- `copilot.js`: prompt parsing, plan generation, and order checking (`Copilot.parse` / `plan` / `diff`)
+- `menu.json`: categorized dishes, three recipe options per dish, shared sauces, customer phrases, and cooking/check data. `art: null` uses the dish emoji instead of unrelated artwork.
+- `orders.js`: menu validation and compilation (`Menu.MENU`), including expansion of shared sauces into optional recipe steps.
+- `copilot.js`: prompt parsing, review/cooking plan generation, and order checking (`Copilot.parse` / `plan` / `cookingPlan` / `diff`)
 - `game.js`: shift timer, customers, patience, tips, rendering
 - `lifecycle.js`: exclusive canvas controller, paused restoration and heartbeat
 - `live-plan.js`: shared model-result schema and strict menu validation

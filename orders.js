@@ -51,6 +51,21 @@
       ];
     });
     const greetings = sanitizeStringArray(data.greetings, "greetings", 80);
+    const sauces = data.sauces ?? [];
+    assert(Array.isArray(sauces), "sauces must be an array");
+    const sauceIds = new Set();
+    for (const [index, sauce] of sauces.entries()) {
+      const context = `sauces[${index}]`;
+      assert(sauce && typeof sauce.id === "string" && /^[a-z0-9-]+$/.test(sauce.id), `${context}.id must be kebab-case`);
+      assert(!sauceIds.has(sauce.id), `duplicate sauce id "${sauce.id}"`);
+      sauceIds.add(sauce.id);
+      sanitizePromptText(sauce.alt, `${context}.alt`);
+      sanitizeText(sauce.emoji, `${context}.emoji`, 16);
+      sanitizeText(sauce.to, `${context}.to`, 120);
+      sanitizeText(sauce.say, `${context}.say`, 120);
+      assert(Array.isArray(sauce.patterns) && sauce.patterns.length, `${context}.patterns must be a non-empty array`);
+      sauce.patterns.forEach(pattern => compilePattern(pattern, context));
+    }
     const dishIds = new Set();
     const dishes = data.dishes.map((dish, dishIndex) => {
       const context = `dishes[${dishIndex}]`;
@@ -59,18 +74,24 @@
       dishIds.add(dish.id);
       const name = sanitizePromptText(dish.name, `${context}.name`);
       const emoji = sanitizeText(dish.emoji, `${context}.emoji`, 16);
-      assert(typeof dish.art === "string" && /^[a-z0-9-]+$/.test(dish.art), `${context}.art must be an asset id`);
+      const category = dish.category === undefined ? "Dishes" : sanitizePromptText(dish.category, `${context}.category`);
+      assert(dish.art === null || (typeof dish.art === "string" && /^[a-z0-9-]+$/.test(dish.art)), `${context}.art must be an asset id or null`);
+      assert(dish.sauces === undefined || typeof dish.sauces === "boolean", `${context}.sauces must be a boolean`);
       const checks = compileChecks(dish.checks, context);
       const say = sanitizeStringArray(dish.say, `${context}.say`, 120);
       assert(Array.isArray(dish.steps) && dish.steps.length >= 2 && dish.steps.every(step =>
         Array.isArray(step) && step.length === 2 && step.every(value => typeof value === "string" && value.length)), `${context}.steps must contain emoji/title pairs`);
-      const steps = dish.steps.map((step, index) => [
+      const additions = dish.sauces ? sauces.filter(sauce => sauce.enabled !== false) : [];
+      const recipe = [...dish.steps, ...additions.map(sauce => [sauce.emoji, `Serve without ${sauce.alt}`])];
+      const steps = recipe.map((step, index) => [
         sanitizeText(step[0], `${context}.steps[${index}][0]`, 16),
         sanitizeText(step[1], `${context}.steps[${index}][1]`, 120),
       ]);
       assert(Array.isArray(dish.options), `${context}.options must be an array`);
       const optionIds = new Set();
-      const allOptions = dish.options.map((option, optionIndex) => {
+      const options = [...dish.options.map(option => ({ ...option, addon: false })),
+        ...additions.map((sauce, index) => ({ ...sauce, step: dish.steps.length + index, addon: true }))];
+      const allOptions = options.map((option, optionIndex) => {
         const optionContext = `${context}.options[${optionIndex}]`;
         assert(option && typeof option.id === "string" && /^[a-z0-9-]+$/.test(option.id), `${optionContext}.id must be kebab-case`);
         assert(!optionIds.has(option.id), `duplicate option id "${option.id}"`);
@@ -88,7 +109,7 @@
       assert(new Set(opts.map(option => option.step)).size === opts.length, `${context} enabled options must target different steps`);
       assert(Array.isArray(dish.patterns) && dish.patterns.length, `${context}.patterns must be a non-empty array`);
       const patterns = dish.patterns.map(pattern => sanitizeText(pattern, `${context}.patterns`, 200));
-      return { ...dish, name, emoji, checks, say, steps, opts, patterns,
+      return { ...dish, name, emoji, category, checks, say, steps, recipeSteps: dish.steps.length, opts, patterns,
         re: new RegExp(patterns.map(pattern => `(?:${compilePattern(pattern, context).source})`).join("|"), "i") };
     });
     const menu = dishes.filter(dish => dish.enabled !== false);

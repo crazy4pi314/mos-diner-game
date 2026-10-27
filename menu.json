@@ -1,179 +1,211 @@
 {
+  "sauces": [
+    {"id": "secure-secrets-sauce", "enabled": true, "alt": "Mo's sweet and sour secure secrets sauce", "emoji": "🥣", "to": "Pack a sweet-and-sour secure secrets sauce cup", "patterns": ["secure secrets sauce", "sweet[- ]and[- ]sour", "sweet and sour"], "say": "add Mo's sweet and sour secure secrets sauce"},
+    {"id": "security-reviews-dip", "enabled": true, "alt": "Copilot's sour cream and security reviews dip", "emoji": "🥣", "to": "Pack a sour cream and security reviews dip cup", "patterns": ["security reviews dip", "sour cream"], "say": "add Copilot's sour cream and security reviews dip"},
+    {"id": "compliance-gravy", "enabled": true, "alt": "Clippy's compliance campaign gravy", "emoji": "🥣", "to": "Pack a compliance campaign gravy boat", "patterns": ["compliance campaign gravy", "compliance gravy", "\\bgravy\\b"], "say": "add Clippy's compliance campaign gravy"}
+  ],
   "dishes": [
     {
-      "id": "full-stack-pancakes",
-      "enabled": true,
-      "name": "Full-Stack Pancakes",
-      "emoji": "🥞",
-      "art": "pancakes",
-      "checks": {"ingredient": "maple-syrup", "prep": ["./preheat-griddle.sh", "Waiting for griddle to reach 375°F…"], "test": {"t": "cooks the pancakes through", "exp": "expected center temp ≥ 200°F, received 150°F (gooey middle)", "at": "griddle (kitchen/griddle.js:42)", "file": "griddle.js", "what": "cook time", "bad": "raw pancakes"}},
-      "patterns": ["full[- ]?stack pancakes?", "pancakes?", "short stack", "flapjacks?", "hotcakes?"],
-      "say": ["the full-stack pancakes", "a stack of pancakes"],
-      "steps": [["🥣", "Mix buttermilk batter"], ["🍳", "Griddle 3 pancakes"], ["🥞", "Plate the full stack"], ["🧈", "Top with butter and syrup"]],
+      "id": "project-planning-party-platter", "enabled": true, "category": "Appetizers", "sauces": true,
+      "name": "Project Planning Party Platter", "emoji": "🍱", "art": null,
+      "checks": {"ingredient": "party-snacks", "prep": ["./heat-appetizer-oven.sh", "Waiting for appetizer oven to reach 375°F…"], "test": {"t": "heats every shareable through", "exp": "expected center temp >= 165°F, received 120°F", "at": "bake (kitchen/appetizers.js:42)", "file": "appetizers.js", "what": "bake time", "bad": "cold party snacks"}},
+      "patterns": ["project planning party platter", "planning platter", "party platter"],
+      "say": ["the Project Planning Party Platter", "a planning platter"],
+      "steps": [["🥔", "Portion the party shareables"], ["🧀", "Prepare the cheese bites"], ["🔥", "Bake the potato bites"], ["🍱", "Arrange the party platter"]],
       "options": [
-        {"id": "raspberry-branch", "enabled": true, "alt": "raspberry branch", "step": 0, "to": "Mix batter with raspberries", "patterns": ["raspberr", "berry branch"], "say": "with the raspberry branch"},
-        {"id": "scale-out", "enabled": true, "alt": "scale out to 5 pancakes", "step": 1, "to": "Griddle 5 pancakes", "patterns": ["scale (it )?out", "five pancakes", "\\b5 pancakes"], "say": "scale it out to five"},
+        {"id": "scope-creep", "enabled": true, "alt": "scope creep", "step": 0, "to": "Portion extra party shareables", "patterns": ["scope creep", "extra shareables"], "say": "add some scope creep"},
+        {"id": "milestone-mozzarella", "enabled": true, "alt": "milestone mozzarella", "step": 1, "to": "Prepare mozzarella sticks", "patterns": ["milestone mozzarella", "mozzarella sticks"], "say": "include milestone mozzarella"},
+        {"id": "backlog-bites", "enabled": true, "alt": "backlog bites", "step": 2, "to": "Bake extra mini potato bites", "patterns": ["backlog bites", "extra (mini )?potato bites"], "say": "add backlog bites"}
+      ]
+    },
+    {
+      "id": "issue-triage-taquitos", "enabled": true, "category": "Appetizers", "sauces": true,
+      "name": "Issue Triage Taquitos with spicy summary salsa", "emoji": "🌮", "art": null,
+      "checks": {"ingredient": "corn-tortillas", "prep": ["./heat-taquito-oven.sh", "Waiting for taquito oven to reach 400°F…"], "test": {"t": "crisps the taquitos through", "exp": "expected filling temp >= 165°F, received 130°F", "at": "bake (kitchen/taquitos.js:42)", "file": "taquitos.js", "what": "bake time", "bad": "cold taquitos"}},
+      "patterns": ["issue triage taquitos", "\\btaquitos?\\b"],
+      "say": ["the Issue Triage Taquitos with spicy summary salsa", "some triage taquitos"],
+      "steps": [["🍅", "Blend spicy summary salsa"], ["🌮", "Roll four chicken taquitos"], ["🔥", "Bake until crisp"], ["🧀", "Plate with salsa"]],
+      "options": [
+        {"id": "label-it-hot", "enabled": true, "alt": "label it hot", "step": 0, "to": "Blend extra-spicy summary salsa", "patterns": ["label it hot", "extra[- ]spicy salsa"], "say": "label it hot"},
+        {"id": "duplicate-detection", "enabled": true, "alt": "duplicate detection", "step": 1, "to": "Roll eight chicken taquitos", "patterns": ["duplicate detection", "double taquitos", "eight (chicken )?taquitos"], "say": "enable duplicate detection"},
+        {"id": "resolved-con-queso", "enabled": true, "alt": "resolved con queso", "step": 3, "to": "Plate with salsa and queso", "patterns": ["resolved con queso", "cheese topping", "add queso"], "say": "mark them resolved con queso"}
+      ]
+    },
+    {
+      "id": "canvas-collaboration-cheese-fries", "enabled": true, "category": "Appetizers", "sauces": true,
+      "name": "Canvas collaboration cheese fries", "emoji": "🍟", "art": null,
+      "checks": {"ingredient": "french-fries", "prep": ["./heat-fry-station.sh", "Waiting for fry station to reach 350°F…"], "test": {"t": "fries the potatoes until crisp", "exp": "expected crispness >= 8, received 3", "at": "fry (kitchen/fries.js:42)", "file": "fries.js", "what": "fry time", "bad": "soggy fries"}},
+      "patterns": ["canvas collaboration cheese fries", "cheese fries"],
+      "say": ["the Canvas collaboration cheese fries", "an order of cheese fries"],
+      "steps": [["🍟", "Fry a basket of potatoes"], ["🧀", "Melt cheddar over the fries"], ["🥓", "Finish with chives"], ["🍽", "Plate the cheese fries"]],
+      "options": [
+        {"id": "merge-con-queso", "enabled": true, "alt": "merge con queso", "step": 1, "to": "Melt extra cheese over the fries", "patterns": ["merge con queso", "extra cheese"], "say": "merge con queso"},
+        {"id": "live-share-loaded", "enabled": true, "alt": "live-share loaded", "step": 2, "to": "Finish with bacon and chives", "patterns": ["live[- ]share loaded", "bacon topping"], "say": "make them live-share loaded"},
+        {"id": "branch-dressing", "enabled": true, "alt": "branch dressing", "step": 3, "to": "Plate with a ranch drizzle", "patterns": ["branch dressing", "ranch drizzle"], "say": "add branch dressing"}
+      ]
+    },
+    {
+      "id": "stacked-pr-pancakes", "enabled": true, "category": "All Day Breakfast", "sauces": true,
+      "name": "Stacked PR Pancakes", "emoji": "🥞", "art": "pancakes",
+      "checks": {"ingredient": "maple-syrup", "prep": ["./preheat-griddle.sh", "Waiting for griddle to reach 375°F…"], "test": {"t": "cooks the pancakes through", "exp": "expected center temp >= 200°F, received 150°F (gooey middle)", "at": "griddle (kitchen/griddle.js:42)", "file": "griddle.js", "what": "cook time", "bad": "raw pancakes"}},
+      "patterns": ["stacked pr pancakes?", "pancakes?", "short stack", "flapjacks?", "hotcakes?"],
+      "say": ["the Stacked PR Pancakes", "a stack of pancakes"],
+      "steps": [["🥣", "Mix buttermilk batter"], ["🍳", "Griddle three pancakes"], ["🥞", "Plate the PR stack"], ["🧈", "Top with butter and syrup"]],
+      "options": [
+        {"id": "berry-good-review", "enabled": true, "alt": "berry good review", "step": 0, "to": "Mix batter with blueberries", "patterns": ["berry good review", "blueberries", "blueberry batter"], "say": "give them a berry good review"},
+        {"id": "stack-another-commit", "enabled": true, "alt": "stack another commit", "step": 1, "to": "Griddle five pancakes", "patterns": ["stack another commit", "five pancakes", "\\b5 pancakes"], "say": "stack another commit"},
         {"id": "async-syrup", "enabled": true, "alt": "async syrup", "step": 3, "to": "Top with butter, syrup on the side", "patterns": ["async syrup", "syrup async", "syrup on the side", "side of syrup"], "say": "make the syrup async"}
       ]
     },
     {
-      "id": "raspberry-pi",
-      "enabled": true,
-      "name": "Raspberry Pi à la Mode",
-      "emoji": "🥧",
-      "art": "pie",
-      "checks": {"ingredient": "pie-crust", "prep": ["./warm-oven.sh", "Waiting for oven to reach 350°F…"], "test": {"t": "pours the coffee hot", "exp": "expected coffee ≥ 150°F, received 98°F", "at": "pour (kitchen/coffee.js:18)", "file": "coffee.js", "what": "brew temp", "bad": "lukewarm coffee"}},
-      "patterns": ["raspberr(y|ies) pi(e)?", "\\bpi à la mode", "\\bpie à la mode"],
-      "say": ["the Raspberry Pi à la mode", "a slice of Raspberry Pi"],
-      "steps": [["🥧", "Slice the raspberry pie"], ["♨️", "Warm it up"], ["🍨", "Add a scoop of vanilla"], ["☕", "Pour a regular Java"]],
+      "id": "eggs-your-way", "enabled": true, "category": "All Day Breakfast", "sauces": true,
+      "name": "Eggs your way with Copilot code review", "emoji": "🍳", "art": "eggs",
+      "checks": {"ingredient": "fresh-eggs", "prep": ["./heat-egg-pan.sh", "Waiting for egg pan to reach medium heat…"], "test": {"t": "cooks the eggs to order", "exp": "expected whites: set, received: runny", "at": "cook (kitchen/eggs.js:42)", "file": "eggs.js", "what": "cook time", "bad": "undercooked eggs"}},
+      "patterns": ["eggs your way", "copilot code review eggs"],
+      "say": ["the Eggs your way with Copilot code review", "some eggs your way"],
+      "steps": [["🍳", "Fry the first egg over medium"], ["🥣", "Fry the second egg over medium"], ["🍞", "Toast one slice of sourdough"], ["🍽", "Plate eggs and toast"]],
       "options": [
-        {"id": "apple-silicon", "enabled": true, "alt": "Apple Silicon", "step": 0, "to": "Slice the apple pie", "patterns": ["apple silicon", "apple pie"], "say": "use Apple Silicon"},
-        {"id": "cold-boot", "enabled": true, "alt": "cold boot", "step": 1, "to": "Serve it cold", "patterns": ["cold boot", "served? cold", "don'?t warm"], "say": "cold boot it"},
-        {"id": "decaf-mode", "enabled": true, "alt": "decaf mode", "step": 3, "to": "Pour a decaf Java", "patterns": ["decaf mode", "decaf"], "say": "switch the Java to decaf mode"}
+        {"id": "sunny-side-approval", "enabled": true, "alt": "sunny-side approval", "step": 0, "to": "Fry the first egg sunny-side up", "patterns": ["sunny[- ]side approval", "sunny[- ]side up"], "say": "give the first egg sunny-side approval"},
+        {"id": "scramble-the-diff", "enabled": true, "alt": "scramble the diff", "step": 1, "to": "Scramble the second egg into soft curds", "patterns": ["scramble the diff", "scrambled eggs"], "say": "scramble the diff on the second egg"},
+        {"id": "toast-coverage", "enabled": true, "alt": "toast coverage", "step": 2, "to": "Toast two slices of sourdough", "patterns": ["toast coverage", "extra toast"], "say": "increase the toast coverage"}
       ]
     },
     {
-      "id": "java-chip-shake",
-      "enabled": false,
-      "name": "Java Chip Shake",
-      "emoji": "🥤",
-      "art": "shake",
-      "checks": {"ingredient": "vanilla-bean", "prep": ["./chill-blender.sh", "Waiting for blender jar to reach 34°F…"], "test": {"t": "blends to a sippable thickness", "exp": "expected thickness ≤ 8, received 14 (the straw stands up)", "at": "blend (kitchen/blender.js:42)", "file": "blender.js", "what": "milk ratio", "bad": "shakes nobody can drink"}},
-      "patterns": ["java chip", "coffee shake", "coffee milkshake"],
-      "say": ["a Java Chip Shake", "the coffee shake"],
-      "steps": [["☕", "Scoop coffee ice cream"], ["🥛", "Blend with whole milk"], ["🍫", "Mix in chocolate chips"], ["🥤", "Top with whipped cream"]],
+      "id": "bacon-eggs-balanced-reviews", "enabled": true, "category": "All Day Breakfast", "sauces": true,
+      "name": "Bacon, eggs, and balanced code reviews", "emoji": "🥓", "art": "eggs",
+      "checks": {"ingredient": "smoked-bacon", "prep": ["./heat-breakfast-griddle.sh", "Waiting for breakfast griddle to reach 375°F…"], "test": {"t": "cooks the breakfast through", "exp": "expected bacon: cooked, received: raw", "at": "griddle (kitchen/breakfast.js:42)", "file": "breakfast.js", "what": "griddle time", "bad": "raw bacon"}},
+      "patterns": ["bacon,? eggs,? and balanced code reviews", "balanced (code )?reviews", "bacon and eggs"],
+      "say": ["the Bacon, eggs, and balanced code reviews", "a balanced reviews breakfast"],
+      "steps": [["🥓", "Griddle smoked bacon"], ["🍳", "Fry two eggs over medium"], ["🥔", "Cook a side of hash browns"], ["🍽", "Plate the balanced breakfast"]],
       "options": [
-        {"id": "dark-mode", "enabled": true, "alt": "dark mode", "step": 0, "to": "Scoop chocolate ice cream", "patterns": ["dark mode", "chocolate ice cream"], "say": "put it in dark mode"},
-        {"id": "lightweight-runtime", "enabled": true, "alt": "lightweight runtime", "step": 1, "to": "Blend with oat milk", "patterns": ["lightweight runtime", "oat milk"], "say": "with a lightweight runtime"},
-        {"id": "no-callback", "enabled": true, "alt": "no callback", "step": 3, "to": "Pour with no whipped cream", "patterns": ["no callback", "no whipped", "without whipped"], "say": "no callback"}
+        {"id": "crisp-criteria", "enabled": true, "alt": "crisp criteria", "step": 0, "to": "Griddle bacon extra crispy", "patterns": ["crisp criteria", "extra[- ]crispy bacon"], "say": "apply crisp criteria"},
+        {"id": "over-easy-approval", "enabled": true, "alt": "over-easy approval", "step": 1, "to": "Fry two eggs over easy", "patterns": ["over[- ]easy approval", "over easy eggs", "eggs over easy"], "say": "give it over-easy approval"},
+        {"id": "balanced-branches", "enabled": true, "alt": "balanced branches", "step": 2, "to": "Prepare fresh fruit instead of hash browns", "patterns": ["balanced branches", "fruit instead of hash browns"], "say": "use balanced branches"}
       ]
     },
     {
-      "id": "browser-cookies",
-      "enabled": true,
-      "name": "Browser Cookies",
-      "emoji": "🍪",
-      "art": "pancakes",
-      "checks": {"ingredient": "all-purpose-flour", "prep": ["./preheat-cookie-oven.sh", "Waiting for cookie oven to reach 350°F…"], "test": {"t": "bakes the cookies through", "exp": "expected centers: \"set\", received: \"raw dough\"", "at": "bake (kitchen/cookie-oven.js:42)", "file": "cookie-oven.js", "what": "bake time", "bad": "raw cookies"}},
-      "patterns": ["browser cookies?", "cookiecutter cookies?", "cookie cutter cookies?", "\\bcookies?\\b"],
-      "say": ["the Browser Cookies", "a batch of browser cookies"],
-      "steps": [["🥣", "Mix sugar-cookie dough"], ["🐙", "Cut Octocat-shaped cookies"], ["🔥", "Bake until golden"], ["🎨", "Finish with diner icing"]],
+      "id": "feature-franks-n-beans", "enabled": true, "category": "Mains", "sauces": true,
+      "name": "Feature-by-the-forkful franks-n-beans", "emoji": "🫘", "art": null,
+      "checks": {"ingredient": "baked-beans", "prep": ["./heat-bean-pot.sh", "Waiting for bean pot to simmer…"], "test": {"t": "heats the franks and beans through", "exp": "expected temp >= 165°F, received 125°F", "at": "simmer (kitchen/beans.js:42)", "file": "beans.js", "what": "simmer time", "bad": "cold beans"}},
+      "patterns": ["feature[- ]by[- ]the[- ]forkful", "franks[- ]n[- ]beans", "franks and beans"],
+      "say": ["the Feature-by-the-forkful franks-n-beans", "some franks and beans"],
+      "steps": [["🫘", "Simmer the baked beans"], ["🌭", "Grill and slice the franks"], ["🥣", "Fold the franks into the beans"], ["🍽", "Ladle into a bowl"]],
       "options": [
-        {"id": "chocolate-chip-template", "enabled": true, "alt": "chocolate-chip template", "step": 0, "to": "Mix chocolate-chip dough", "patterns": ["chocolate[- ]chip template", "chocolate chips?"], "say": "use the chocolate-chip template"},
-        {"id": "fork-batch", "enabled": true, "alt": "fork the batch", "step": 1, "to": "Cut a double batch of Octocat cookies", "patterns": ["fork (the )?batch", "double batch"], "say": "fork the batch"},
-        {"id": "headless", "enabled": true, "alt": "headless", "step": 3, "to": "Serve with no icing", "patterns": ["headless", "no icing", "without icing"], "say": "make them headless"}
+        {"id": "feature-flag-on-fire", "enabled": true, "alt": "feature flag on fire", "step": 0, "to": "Simmer spicy baked beans", "patterns": ["feature flag on fire", "spicy beans"], "say": "set the feature flag on fire"},
+        {"id": "fork-the-franks", "enabled": true, "alt": "fork the franks", "step": 1, "to": "Grill and slice a double portion of franks", "patterns": ["fork the franks", "double franks"], "say": "fork the franks"},
+        {"id": "cornbread-coverage", "enabled": true, "alt": "cornbread coverage", "step": 3, "to": "Ladle into a bowl with cornbread on the side", "patterns": ["cornbread coverage", "\\bcornbread\\b"], "say": "add cornbread coverage"}
       ]
     },
     {
-      "id": "merge-melt",
-      "enabled": false,
-      "name": "Merge Melt",
-      "emoji": "🥪",
-      "art": "grilled-cheese",
-      "checks": {"ingredient": "sharp-cheddar", "prep": ["./preheat-griddle.sh", "Waiting for griddle to reach 350°F…"], "test": {"t": "melts the cheese all the way through", "exp": "expected cheese: \"melted\", received: \"cold in the middle\"", "at": "griddle (kitchen/griddle.js:27)", "file": "griddle.js", "what": "heat", "bad": "cold grilled cheese"}},
-      "patterns": ["merge melt", "grilled cheese", "toastie"],
-      "say": ["a Merge Melt", "the Merge Melt"],
-      "steps": [["🧈", "Butter the sourdough"], ["🧀", "Layer on cheddar"], ["🔥", "Merge on the griddle until golden"], ["🍅", "Plate with tomato soup"]],
+      "id": "copilot-sdk-fried-chicken", "enabled": true, "category": "Mains", "sauces": true,
+      "name": "Copilot SDK fried Chicken", "emoji": "🍗", "art": null,
+      "checks": {"ingredient": "chicken-pieces", "prep": ["./heat-chicken-fryer.sh", "Waiting for chicken fryer to reach 350°F…"], "test": {"t": "cooks the chicken safely", "exp": "expected internal temp >= 165°F, received 140°F", "at": "fry (kitchen/chicken.js:42)", "file": "chicken.js", "what": "fry time", "bad": "undercooked chicken"}},
+      "patterns": ["copilot sdk fried chicken", "sdk chicken", "fried chicken"],
+      "say": ["the Copilot SDK fried Chicken", "some SDK chicken"],
+      "steps": [["🌶", "Coat chicken in seasoned breading"], ["🔥", "Fry the chicken until golden"], ["🥒", "Add dill pickles"], ["🍗", "Plate with a biscuit"]],
       "options": [
-        {"id": "rebase-on-rye", "enabled": true, "alt": "rebase on rye", "step": 0, "to": "Butter the rye bread", "patterns": ["rebase on rye", "\\brye\\b"], "say": "rebase it on rye"},
-        {"id": "accept-theirs", "enabled": true, "alt": "accept theirs", "step": 1, "to": "Layer on pepper jack", "patterns": ["accept theirs", "pepper ?jack"], "say": "accept theirs for the cheese"},
-        {"id": "squash-side", "enabled": true, "alt": "squash the side", "step": 3, "to": "Plate with a side salad", "patterns": ["squash the side", "side salad", "\\bsalad\\b"], "say": "squash the side"}
+        {"id": "hotfix-heat", "enabled": true, "alt": "hotfix heat", "step": 0, "to": "Coat chicken in spicy breading", "patterns": ["hotfix heat", "spicy breading"], "say": "add hotfix heat"},
+        {"id": "plugin-pickles", "enabled": true, "alt": "plugin pickles", "step": 2, "to": "Add extra dill pickles", "patterns": ["plug[- ]?in pickles", "extra pickles"], "say": "include plugin pickles"},
+        {"id": "dependency-slaw", "enabled": true, "alt": "dependency slaw", "step": 3, "to": "Plate with a biscuit and coleslaw on the side", "patterns": ["dependency slaw", "\\bcoleslaw\\b"], "say": "add dependency slaw"}
       ]
     },
     {
-      "id": "sha256-hash-browns",
-      "enabled": true,
-      "name": "SHA-256 Hash Browns",
-      "emoji": "🥔",
-      "art": "eggs",
-      "checks": {"ingredient": "russet-potatoes", "prep": ["./heat-hash-griddle.sh", "Waiting for hash-brown griddle to reach 375°F…"], "test": {"t": "crisps the hash browns evenly", "exp": "expected crispness ≥ 8, received 3 (soggy center)", "at": "griddle (kitchen/hash-griddle.js:42)", "file": "hash-griddle.js", "what": "griddle time", "bad": "soggy hash browns"}},
-      "patterns": ["sha[- ]?256 hash browns?", "hash browns?"],
-      "say": ["the SHA-256 Hash Browns", "an order of hash browns"],
-      "steps": [["🥔", "Shred the potatoes"], ["🧂", "Apply the diner seasoning"], ["🔥", "Griddle until crisp"], ["🍳", "Plate with a fried egg"]],
+      "id": "sandbox-deli-sandwich", "enabled": true, "category": "Mains", "sauces": true,
+      "name": "Sandbox deli sandwich", "emoji": "🥪", "art": null,
+      "checks": {"ingredient": "deli-bread", "prep": ["./chill-deli-station.sh", "Waiting for deli station to reach 40°F…"], "test": {"t": "keeps the deli filling chilled", "exp": "expected filling temp <= 40°F, received 60°F", "at": "assemble (kitchen/deli.js:42)", "file": "deli.js", "what": "chill time", "bad": "warm deli filling"}},
+      "patterns": ["sandbox deli sandwich", "sandbox sandwich", "deli sandwich"],
+      "say": ["the Sandbox deli sandwich", "a sandbox sandwich"],
+      "steps": [["🍞", "Slice sourdough bread"], ["🥬", "Layer turkey, cheese, and lettuce"], ["🥒", "Add pickles to the sandwich"], ["🥪", "Close and slice the sandwich"]],
       "options": [
-        {"id": "hash-collision", "enabled": true, "alt": "hash collision", "step": 1, "to": "Season with peppers and onions", "patterns": ["hash collision", "peppers? and onions?", "onions? and peppers?"], "say": "add a hash collision"},
-        {"id": "extra-encryption", "enabled": true, "alt": "extra encryption", "step": 2, "to": "Griddle extra crispy", "patterns": ["extra encryption", "extra crisp"], "say": "with extra encryption"},
-        {"id": "vegan-fork", "enabled": true, "alt": "vegan fork", "step": 3, "to": "Plate with sliced avocado", "patterns": ["vegan fork", "avocado", "no egg"], "say": "use the vegan fork"}
+        {"id": "rebase-on-rye", "enabled": true, "alt": "rebase on rye", "step": 0, "to": "Slice rye bread", "patterns": ["rebase on rye", "\\brye\\b"], "say": "rebase it on rye"},
+        {"id": "stack-overflow", "enabled": true, "alt": "stack overflow", "step": 1, "to": "Layer extra turkey, cheese, and lettuce", "patterns": ["stack overflow", "extra deli filling"], "say": "give it a stack overflow"},
+        {"id": "pickle-isolation", "enabled": true, "alt": "pickle isolation", "step": 2, "to": "Pack pickles on the side", "patterns": ["pickle isolation", "pickles on the side"], "say": "enable pickle isolation"}
       ]
     },
     {
-      "id": "pull-request-pulled-pork",
-      "enabled": false,
-      "name": "Pull Request Pulled Pork",
-      "emoji": "🥪",
-      "art": "burger",
-      "checks": {"ingredient": "smoked-pork", "prep": ["./warm-smoker.sh", "Waiting for smoker to reach 225°F…"], "test": {"t": "warms the pulled pork safely", "exp": "expected internal temp ≥ 165°F, received 125°F", "at": "warm (kitchen/smoker.js:42)", "file": "smoker.js", "what": "warm time", "bad": "cold pulled pork"}},
-      "patterns": ["pull request pulled[- ]pork", "pulled[- ]pork", "pr pork"],
-      "say": ["the Pull Request Pulled Pork", "a pulled-pork sandwich"],
-      "steps": [["🐖", "Pull the smoked pork"], ["🥫", "Apply barbecue sauce"], ["🍞", "Toast the bun"], ["🥬", "Build with slaw"], ["🥒", "Finish with pickles"]],
+      "id": "split-py-soup", "enabled": true, "category": "Soup", "sauces": true,
+      "name": "Split Py soup", "emoji": "🍵", "art": null,
+      "checks": {"ingredient": "split-peas", "prep": ["./heat-pea-soup-pot.sh", "Waiting for pea soup to simmer…"], "test": {"t": "softens the split peas", "exp": "expected peas: tender, received: hard", "at": "simmer (kitchen/pea-soup.js:42)", "file": "pea-soup.js", "what": "simmer time", "bad": "hard split peas"}},
+      "patterns": ["split py soup", "split pea soup"],
+      "say": ["the Split Py soup", "a bowl of split pea soup"],
+      "steps": [["🫛", "Simmer split peas with vegetables"], ["🥣", "Blend the soup until smooth"], ["🧂", "Season with salt and pepper"], ["🍵", "Ladle into a soup bowl"]],
       "options": [
-        {"id": "fork-it", "enabled": true, "alt": "fork it", "step": 0, "to": "Pull a double portion of pork", "patterns": ["fork it", "double pork", "double portion"], "say": "fork it"},
-        {"id": "force-push", "enabled": true, "alt": "force push", "step": 1, "to": "Apply barbecue and hot sauce", "patterns": ["force push", "hot sauce", "extra spicy"], "say": "give it a force push"},
-        {"id": "draft-mode", "enabled": true, "alt": "draft mode", "step": 3, "to": "Build the sandwich, slaw on the side", "patterns": ["draft mode", "slaw on the side"], "say": "leave the slaw in draft mode"}
+        {"id": "ham-main", "enabled": true, "alt": "ham main", "step": 0, "to": "Simmer split peas, vegetables, and diced ham", "patterns": ["ham main", "diced ham"], "say": "run ham main"},
+        {"id": "pepper-exception", "enabled": true, "alt": "pepper exception", "step": 2, "to": "Season with salt and extra black pepper", "patterns": ["pepper exception", "extra (black )?pepper"], "say": "raise a pepper exception"},
+        {"id": "import-croutons", "enabled": true, "alt": "import croutons", "step": 3, "to": "Ladle into a bowl and top with crunchy croutons", "patterns": ["import croutons", "\\bcroutons\\b"], "say": "import croutons"}
       ]
     },
     {
-      "id": "docker-donuts",
-      "enabled": false,
-      "name": "Docker Donuts",
-      "emoji": "🍩",
-      "art": "pancakes",
-      "checks": {"ingredient": "donut-flour", "prep": ["./heat-fryer.sh", "Waiting for fryer oil to reach 350°F…"], "test": {"t": "fries the donuts through", "exp": "expected center: \"fluffy\", received: \"raw dough\"", "at": "fry (kitchen/fryer.js:42)", "file": "fryer.js", "what": "fry time", "bad": "raw donuts"}},
-      "patterns": ["docker donuts?", "container of donuts?", "\\bdonuts?\\b"],
-      "say": ["a container of Docker Donuts", "the Docker Donuts"],
-      "steps": [["🥣", "Mix the donut dough"], ["🍩", "Cut the mini donuts"], ["✨", "Build with vanilla glaze"], ["🥜", "Top the container with nuts"]],
+      "id": "end-to-end-tomato-soup", "enabled": true, "category": "Soup", "sauces": true,
+      "name": "End-to-end test tomato soup", "emoji": "🍅", "art": null,
+      "checks": {"ingredient": "ripe-tomatoes", "prep": ["./heat-tomato-soup-pot.sh", "Waiting for tomato soup to simmer…"], "test": {"t": "serves tomato soup hot", "exp": "expected temp >= 165°F, received 110°F", "at": "simmer (kitchen/tomato-soup.js:42)", "file": "tomato-soup.js", "what": "simmer time", "bad": "lukewarm tomato soup"}},
+      "patterns": ["end[- ]to[- ]end test tomato soup", "tomato soup"],
+      "say": ["the End-to-end test tomato soup", "a bowl of tomato soup"],
+      "steps": [["🍅", "Simmer tomatoes and stock"], ["🥣", "Blend until smooth"], ["🌿", "Season the soup"], ["🍽", "Ladle into a bowl"]],
       "options": [
-        {"id": "alpine-image", "enabled": true, "alt": "Alpine image", "step": 0, "to": "Mix a light cake-donut dough", "patterns": ["alpine image", "light dough"], "say": "use the Alpine image"},
-        {"id": "multi-stage-build", "enabled": true, "alt": "multi-stage build", "step": 2, "to": "Build with assorted glazes", "patterns": ["multi[- ]stage build", "assorted glazes"], "say": "make it a multi-stage build"},
-        {"id": "rootless", "enabled": true, "alt": "rootless", "step": 3, "to": "Pack the container with no nuts", "patterns": ["rootless", "no nuts", "without nuts"], "say": "run it rootless"}
+        {"id": "cream-integration", "enabled": true, "alt": "cream integration", "step": 1, "to": "Blend until smooth and add a cream swirl", "patterns": ["cream integration", "cream swirl"], "say": "add cream integration"},
+        {"id": "basil-coverage", "enabled": true, "alt": "basil coverage", "step": 2, "to": "Season and top with fresh basil", "patterns": ["basil coverage", "fresh basil"], "say": "increase basil coverage"},
+        {"id": "full-stack-dunk", "enabled": true, "alt": "full-stack dunk", "step": 3, "to": "Ladle into a bowl with grilled-cheese dippers", "patterns": ["full[- ]stack dunk", "grilled[- ]cheese dippers"], "say": "add a full-stack dunk"}
       ]
     },
     {
-      "id": "cache-cow-sundae",
-      "enabled": false,
-      "name": "Cache Cow Sundae",
-      "emoji": "🍨",
-      "art": "shake",
-      "checks": {"ingredient": "vanilla-ice-cream", "prep": ["./chill-sundae-glass.sh", "Waiting for sundae glass to reach 34°F…"], "test": {"t": "keeps the sundae frozen", "exp": "expected temperature ≤ 20°F, received 42°F (melting)", "at": "assemble (kitchen/sundae.js:42)", "file": "sundae.js", "what": "chill time", "bad": "melted sundaes"}},
-      "patterns": ["cache cow sundae", "cache sundae", "\\bsundae\\b"],
-      "say": ["a Cache Cow Sundae", "the hot-fudge sundae"],
-      "steps": [["🍨", "Scoop vanilla ice cream"], ["🍫", "Add hot fudge"], ["🧁", "Top with whipped cream"], ["🍒", "Complete with a cherry"]],
+      "id": "chicken-noodle-unit-test-soup", "enabled": true, "category": "Soup", "sauces": true,
+      "name": "Chicken noodle unit test soup", "emoji": "🍜", "art": null,
+      "checks": {"ingredient": "soup-noodles", "prep": ["./heat-noodle-soup-pot.sh", "Waiting for noodle soup to simmer…"], "test": {"t": "cooks the noodles through", "exp": "expected noodles: tender, received: crunchy", "at": "simmer (kitchen/noodle-soup.js:42)", "file": "noodle-soup.js", "what": "simmer time", "bad": "crunchy noodles"}},
+      "patterns": ["chicken noodle unit test soup", "chicken noodle soup", "unit test soup"],
+      "say": ["the Chicken noodle unit test soup", "a bowl of chicken noodle soup"],
+      "steps": [["🥕", "Simmer chicken and vegetables in vegetable stock"], ["🍜", "Cook egg noodles in the broth"], ["🧂", "Season the soup"], ["🍽", "Ladle into a bowl"]],
       "options": [
-        {"id": "cold-cache", "enabled": true, "alt": "cold cache", "step": 1, "to": "Skip the hot fudge", "patterns": ["cold cache", "no fudge", "without fudge"], "say": "make it a cold cache"},
-        {"id": "cache-miss", "enabled": true, "alt": "cache miss", "step": 2, "to": "Add brownie pieces and whipped cream", "patterns": ["cache miss", "brownie pieces?", "brownies?"], "say": "add a cache miss"},
-        {"id": "clear-cache", "enabled": true, "alt": "clear cache", "step": 3, "to": "Serve with no cherry", "patterns": ["clear (the )?cache", "no cherry", "without (a |the )?cherry"], "say": "clear the cache"}
+        {"id": "mock-chicken", "enabled": true, "alt": "mock chicken", "step": 0, "to": "Simmer chickpeas and vegetables in vegetable stock", "patterns": ["mock chicken", "\\bchickpeas\\b"], "say": "use mock chicken"},
+        {"id": "parameterize-the-pasta", "enabled": true, "alt": "parameterize the pasta", "step": 1, "to": "Cook alphabet noodles in the broth", "patterns": ["parameterize the pasta", "alphabet noodles"], "say": "parameterize the pasta"},
+        {"id": "boundary-breadsticks", "enabled": true, "alt": "boundary breadsticks", "step": 3, "to": "Ladle into a bowl with breadsticks on the side", "patterns": ["boundary breadsticks", "\\bbreadsticks\\b"], "say": "add boundary breadsticks"}
       ]
     },
     {
-      "id": "binary-bagel",
-      "enabled": false,
-      "name": "Binary Bagel",
-      "emoji": "🥯",
-      "art": "burger",
-      "checks": {"ingredient": "everything-bagels", "prep": ["./preheat-toaster.sh", "Waiting for toaster to reach medium-high…"], "test": {"t": "toasts both bagel halves evenly", "exp": "expected browning: \"golden\", received: \"pale\"", "at": "toast (kitchen/toaster.js:42)", "file": "toaster.js", "what": "toast time", "bad": "untoasted bagels"}},
-      "patterns": ["binary bagel", "\\bbagel\\b"],
-      "say": ["a Binary Bagel", "the everything bagel"],
-      "steps": [["🥯", "Slice an everything bagel"], ["🔥", "Toast both bits"], ["🧀", "Apply cream cheese"], ["🍅", "Add tomato"], ["🔒", "Close the sandwich"]],
+      "id": "catch-issues-banana-split", "enabled": true, "category": "Dessert", "sauces": false,
+      "name": "Catch issues and banana split", "emoji": "🍌", "art": null,
+      "checks": {"ingredient": "ripe-bananas", "prep": ["./chill-split-dish.sh", "Waiting for banana split dish to reach 34°F…"], "test": {"t": "keeps the ice cream frozen", "exp": "expected temp <= 20°F, received 42°F", "at": "assemble (kitchen/banana-split.js:42)", "file": "banana-split.js", "what": "chill time", "bad": "melted banana splits"}},
+      "patterns": ["catch issues and banana split", "banana split"],
+      "say": ["the Catch issues and banana split", "a banana split"],
+      "steps": [["🍌", "Split a banana lengthwise"], ["🍨", "Add three scoops of ice cream"], ["🍫", "Drizzle chocolate sauce"], ["🍒", "Finish with whipped cream and a cherry"]],
       "options": [
-        {"id": "64-bit", "enabled": true, "alt": "64-bit", "step": 0, "to": "Slice two everything bagels", "patterns": ["64[- ]?bit", "double stack", "two bagels"], "say": "make it 64-bit"},
-        {"id": "encrypted", "enabled": true, "alt": "encrypted", "step": 2, "to": "Apply cream cheese and lox", "patterns": ["encrypted", "\\blox\\b"], "say": "encrypt it with lox"},
-        {"id": "headless", "enabled": true, "alt": "headless", "step": 4, "to": "Serve it open-faced", "patterns": ["headless", "open[- ]faced"], "say": "run it headless"}
+        {"id": "breakpoint-banana", "enabled": true, "alt": "breakpoint banana", "step": 0, "to": "Split two bananas lengthwise", "patterns": ["breakpoint banana", "extra banana"], "say": "add a breakpoint banana"},
+        {"id": "fudge-the-coverage", "enabled": true, "alt": "fudge the coverage", "step": 2, "to": "Drizzle hot fudge over the ice cream", "patterns": ["fudge the coverage", "hot fudge"], "say": "fudge the coverage"},
+        {"id": "cherry-pick-the-commit", "enabled": true, "alt": "cherry-pick the commit", "step": 3, "to": "Finish with whipped cream and extra cherries", "patterns": ["cherry[- ]pick the commit", "extra cherries"], "say": "cherry-pick the commit"}
+      ]
+    },
+    {
+      "id": "sky-high-apple-pie", "enabled": true, "category": "Dessert", "sauces": false,
+      "name": "Sky-high code quality apple pie", "emoji": "🥧", "art": "pie",
+      "checks": {"ingredient": "pie-crust", "prep": ["./warm-pie-oven.sh", "Waiting for pie oven to reach 350°F…"], "test": {"t": "bakes the apple filling through", "exp": "expected apples: tender, received: hard", "at": "bake (kitchen/pie.js:42)", "file": "pie.js", "what": "bake time", "bad": "undercooked apple pie"}},
+      "patterns": ["sky[- ]high code quality apple pie", "apple pie"],
+      "say": ["the Sky-high code quality apple pie", "a slice of apple pie"],
+      "steps": [["🥧", "Bake apple pie with a full top crust"], ["🍽", "Slice and plate the pie"], ["♨️", "Serve the slice at room temperature"], ["🍴", "Finish with a dessert fork"]],
+      "options": [
+        {"id": "lint-free-lattice", "enabled": true, "alt": "lint-free lattice", "step": 0, "to": "Bake apple pie with a lattice crust", "patterns": ["lint[- ]free lattice", "lattice crust"], "say": "use a lint-free lattice"},
+        {"id": "warm-restart", "enabled": true, "alt": "warm restart", "step": 2, "to": "Warm the apple pie slice", "patterns": ["warm restart", "warmed slice", "warm (the |a )?(apple )?pie"], "say": "give it a warm restart"},
+        {"id": "vanilla-validation", "enabled": true, "alt": "vanilla validation", "step": 3, "to": "Finish with vanilla ice cream and a dessert fork", "patterns": ["vanilla validation", "vanilla ice cream"], "say": "add vanilla validation"}
+      ]
+    },
+    {
+      "id": "cookies-code-scanning-shake", "enabled": true, "category": "Dessert", "sauces": false,
+      "name": "Cookies and code scanning shake", "emoji": "🥤", "art": "shake",
+      "checks": {"ingredient": "sandwich-cookies", "prep": ["./chill-shake-blender.sh", "Waiting for shake blender to reach 34°F…"], "test": {"t": "blends to a sippable thickness", "exp": "expected thickness <= 8, received 14", "at": "blend (kitchen/shake.js:42)", "file": "shake.js", "what": "milk ratio", "bad": "shakes nobody can drink"}},
+      "patterns": ["cookies and code scanning shake", "code scanning shake", "cookies? (and cream )?(milk)?shake"],
+      "say": ["the Cookies and code scanning shake", "a code scanning shake"],
+      "steps": [["🍨", "Scoop vanilla ice cream"], ["🥛", "Blend with milk and cookies"], ["🍪", "Sprinkle cookie crumble"], ["🥤", "Top with whipped cream"]],
+      "options": [
+        {"id": "dark-mode-scan", "enabled": true, "alt": "dark-mode scan", "step": 0, "to": "Scoop chocolate ice cream", "patterns": ["dark[- ]mode scan", "chocolate ice cream"], "say": "run a dark-mode scan"},
+        {"id": "cookie-coverage", "enabled": true, "alt": "cookie coverage", "step": 2, "to": "Sprinkle extra cookie crumble", "patterns": ["cookie coverage", "extra cookie crumble"], "say": "increase cookie coverage"},
+        {"id": "no-callback-cream", "enabled": true, "alt": "no callback cream", "step": 3, "to": "Pour with no whipped cream", "patterns": ["no callback cream", "no whipped cream", "without whipped cream"], "say": "no callback cream"}
       ]
     }
   ],
   "customers": [
-    ["@hungry-octocat", "🐙"],
-    ["@monalisa", "👩‍🎨"],
-    ["@hubot", "🤖"],
-    ["@ducky-dev", "🦆"],
-    ["@merge-queen", "👸"],
-    ["@rebase-randy", "🧔"],
-    ["@lgtm-lucy", "👩‍🦰"],
-    ["@nitpick-nick", "🧐"],
-    ["@shipit-squirrel", "🐿️"],
-    ["@yaml-yolanda", "👵"],
-    ["@cache-carl", "🧑‍🦲"],
-    ["@sudo-sam", "🧑‍💻"]
+    ["@hungry-octocat", "🐙"], ["@monalisa", "👩‍🎨"], ["@hubot", "🤖"],
+    ["@ducky-dev", "🦆"], ["@merge-queen", "👸"], ["@rebase-randy", "🧔"],
+    ["@lgtm-lucy", "👩‍🦰"], ["@nitpick-nick", "🧐"], ["@shipit-squirrel", "🐿️"],
+    ["@yaml-yolanda", "👵"], ["@cache-carl", "🧑‍🦲"], ["@sudo-sam", "🧑‍💻"]
   ],
   "greetings": ["Hi! Can I get", "Hey there! I'll have", "Morning! I'd love", "Hello! Could I get", "Hiya! Just", "Hey! I'll take"]
 }

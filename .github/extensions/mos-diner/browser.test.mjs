@@ -77,7 +77,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
                 signal.addEventListener("abort", () => { modelAborted = true; reject(signal.reason); }, { once: true });
             });
             if (modelBehavior === "late") await new Promise(resolve => { finishModel = resolve; });
-            return { dish: "browser-cookies", opts: [], note: "Other details use house defaults." };
+            return { dish: "cookies-code-scanning-shake", opts: [], note: "Other details use house defaults." };
         },
     });
     host.onError = () => {};
@@ -120,6 +120,11 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         for (const view of ["hub", "classic"]) {
             const id = `offline-${skin}-${view}`;
             const offline = await page(await host.open(id, { gameId: id, skin, view }));
+            assert.deepEqual(await offline.evaluate('Array.from(document.querySelectorAll("#m-tabs button"), b => b.firstChild.textContent.replace(/[^A-Za-z]/g, ""))'),
+                ["Orders", "Prep", "Kitchen"]);
+            assert.deepEqual(await offline.evaluate('Array.from(document.querySelectorAll(".shell > section"), pane => pane.getAttribute("aria-label"))'),
+                ["Orders", "Prep", "Kitchen"]);
+            assert.equal(await offline.evaluate('document.querySelector(".k-head b").textContent'), "Kitchen");
             if (skin === "cozy") {
                 assert.equal(await offline.evaluate(`(async () => {
                   await document.fonts.load('500 16px "Fredoka"');
@@ -482,7 +487,8 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     })()`);
     await until(() => second.evaluate('__mo.S.phase === "won"'), "Concurrent deployments did not finish the shift.");
     assert.equal(await second.evaluate("__mo.S.served"), 3);
-    assert.equal(await second.evaluate('__mo.S.orders.filter(o => o.status === "deploying").length'), 1);
+    assert.equal(await second.evaluate('__mo.S.orders.filter(o => o.status === "deploying").length'),
+        await second.evaluate("__mo.S.orders.length - __mo.S.served"));
     assert.equal(await second.evaluate('document.querySelector("#hud-served").textContent'), "3/3");
     assert.equal(await second.evaluate('document.querySelectorAll("#over-orders li").length'), 3);
     await host.close("fresh");
@@ -538,6 +544,76 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.equal(await classic.evaluate("__mo.S.orders.length"), 0);
     await host.close("classic");
 
+    for (const skin of ["default", "cozy"]) {
+        for (const view of ["hub", "classic"]) {
+            const menuURL = pathToFileURL(join(root, "index.html"));
+            if (skin === "cozy") menuURL.searchParams.set("skin", skin);
+            if (view === "classic") menuURL.searchParams.set("fun", "");
+            const menuPage = await page(menuURL.href, { before: `
+              const originalTimeout = window.setTimeout.bind(window);
+              window.setTimeout = (fn, delay, ...args) => originalTimeout(fn, delay === 450 ? 1 : delay, ...args);
+            ` });
+            const dishes = await menuPage.evaluate("Copilot.MENU.map(d => ({ id: d.id, emoji: d.emoji, art: d.art, sauces: d.sauces }))");
+            for (const dish of dishes) {
+                const details = await menuPage.evaluate(`(async () => {
+                  __mo.restart(); await __mo.resume();
+                  const d = Copilot.dishOf(${JSON.stringify(dish.id)}), o = __mo.active();
+                  o.want = { dish: d.id, opts: d.opts.map(option => option.id) }; o.failKind = null;
+                  document.querySelector('[data-act="dish"][data-arg="' + d.id + '"]').click();
+                  const categories = [...document.querySelectorAll(".chips-card h3")].map(h => h.textContent);
+                  for (const option of d.opts) {
+                    document.querySelector('[data-act="opt"][data-arg="' + option.id + '"]').click();
+                  }
+                  document.querySelector("#send-msg").click();
+                  const selected = [...o.set], expected = d.opts.map(option => option.id);
+                  document.querySelector('[data-act="approve"]').click();
+                  return { categories, selected, expected, steps: o.pending.length };
+                })()`);
+                assert.deepEqual(details.categories.slice(0, 5), ["Appetizers", "All Day Breakfast", "Mains", "Soup", "Dessert"]);
+                assert.equal(details.categories.includes("Secret Sauces"), dish.sauces);
+                assert.deepEqual(details.selected, details.expected, `${skin}/${view}/${dish.id}: chips must round-trip`);
+                assert.equal(details.steps, dish.sauces ? 7 : 4);
+                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), `${dish.id} did not finish cooking.`);
+                assert.equal(await menuPage.evaluate('__mo.active().prs.length'), details.steps);
+                if (!dish.art) {
+                    assert.equal(await menuPage.evaluate('document.querySelector(".kp-emoji:last-child").textContent'), dish.emoji);
+                }
+                await menuPage.evaluate("__mo.serve(__mo.active()); __mo.renderAll()");
+                assert.equal(await menuPage.evaluate("__mo.S.served"), 1);
+                assert.equal(await menuPage.evaluate("__mo.S.orders[0].returns"), 0);
+                if (view === "classic" && !dish.art) {
+                    assert.equal(await menuPage.evaluate('document.querySelector(".seat.eating .dish-food").textContent'), dish.emoji);
+                }
+            }
+            for (const remove of [false, true]) {
+                await menuPage.evaluate(`(async () => {
+                  __mo.restart(); await __mo.resume();
+                  const o = __mo.active(), d = Copilot.MENU[0], sauce = d.opts.find(option => option.addon);
+                  o.want = { dish: d.id, opts: ${remove} ? [] : [sauce.id] }; o.failKind = null;
+                  __mo.sendPrompt(o, Copilot.promptText(d.id, ${remove} ? [sauce.id] : []));
+                  __mo.approve(o); __mo.renderAll();
+                })()`);
+                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), "Wrong sauce order did not cook.");
+                assert.equal(await menuPage.evaluate("__mo.active().prs.length"), remove ? 5 : 4);
+                assert.deepEqual(await menuPage.evaluate(`(() => {
+                  const o = __mo.active(), sauce = Copilot.dishOf(o.dish).opts.find(option => option.addon);
+                  __mo.serve(o);
+                  const status = o.status, flagged = o.flag;
+                  __mo.toggle(o, sauce.id); __mo.approve(o); __mo.renderAll();
+                  return { status, flagged, expected: [sauce.id], pending: o.pending.length };
+                })()`), { status: "returned", flagged: ["secure-secrets-sauce"], expected: ["secure-secrets-sauce"], pending: 1 });
+                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), "Sauce correction did not finish.");
+                await menuPage.evaluate("__mo.serve(__mo.active()); __mo.renderAll()");
+                assert.equal(await menuPage.evaluate("__mo.S.served"), 1);
+            }
+            await until(() => menuPage.evaluate('Array.from(document.images).every(img => !img.getAttribute("src") || (img.complete && img.naturalWidth > 0))'),
+                "Menu visuals must not request missing dish or plating assets.");
+            assert.deepEqual(menuPage.errors, []);
+            await menuPage.evaluate("__mo.pause()");
+            await menuPage.closePage();
+        }
+    }
+
     const standalone = await page(pathToFileURL(join(root, "index.html")).href);
     await standalone.evaluate('document.querySelector("#info-dialog").close()');
     await wait(1100);
@@ -581,11 +657,11 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await live.evaluate("__mo.resume()");
     assert.match(await live.evaluate('document.querySelector("#cp-body").innerText'), /sign-in, network and model access unverified/);
     await live.evaluate(`(() => {
-      const o = __mo.active(); o.want = { dish: "browser-cookies", opts: ["headless"] }; o.speech = "Browser Cookies, headless.";
+      const o = __mo.active(); o.want = { dish: "cookies-code-scanning-shake", opts: ["no-callback-cream"] }; o.speech = "Cookies and code scanning shake, no callback cream.";
     })()`);
     modelBehavior = "wait";
     let previousCalls = modelCalls;
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Browser Cookies")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
     await until(() => modelCalls > previousCalls, "Live request did not reach the provider.");
     assert.equal(await live.evaluate('document.querySelector("#send-msg").disabled'), true);
     assert.match(await live.evaluate('document.querySelector("#cp-body").innerText'), /Copilot is proposing/);
@@ -602,13 +678,13 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await until(() => live.evaluate('document.querySelector("#cp-body").innerText.includes("could not propose")'), "Model failure was not shown.");
     assert.equal(await live.evaluate("__mo.active().dish"), null);
     modelBehavior = "invalid";
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Browser Cookies")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
     await until(() => live.evaluate('!document.querySelector("#send-msg").disabled'), "Invalid reply did not unblock retry.");
     assert.equal(await live.evaluate("__mo.active().dish"), null);
 
     modelBehavior = "wait"; modelAborted = false;
     previousCalls = modelCalls;
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Browser Cookies")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
     await until(() => modelCalls > previousCalls, "Second request did not reach the provider.");
     await live.evaluate("__mo.pause()");
     await until(() => modelAborted, "Pausing did not abort the model.");
@@ -616,38 +692,38 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await wait(200);
     assert.deepEqual(await live.evaluate("__mo.snapshot()"), livePaused);
     assert.equal(livePaused.state.orders[0].dish, null);
-    assert.equal(livePaused.state.orders[0].text, "Browser Cookies");
+    assert.equal(livePaused.state.orders[0].text, "Cookies and code scanning shake");
     assert.equal(JSON.stringify(livePaused).includes("requestId"), false);
     await live.evaluate("__mo.resume()");
     assert.match(await live.evaluate('document.querySelector("#cp-body").innerText'), /interrupted by pause/);
 
     modelBehavior = "wait"; modelAborted = false;
     previousCalls = modelCalls;
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Browser Cookies")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
     await until(() => modelCalls > previousCalls, "Editable request did not reach the provider.");
     await live.evaluate(`(() => {
-      const prompt = document.querySelector("#prompt"); prompt.value = "A Java Chip Shake";
+      const prompt = document.querySelector("#prompt"); prompt.value = "A code scanning shake";
       prompt.dispatchEvent(new Event("input", { bubbles: true }));
     })()`);
     await until(() => modelAborted, "Editing did not abort the previous prompt revision.");
-    assert.equal(await live.evaluate("__mo.active().text"), "A Java Chip Shake");
+    assert.equal(await live.evaluate("__mo.active().text"), "A code scanning shake");
     assert.equal(await live.evaluate("__mo.active().dish"), null);
     assert.equal(await live.evaluate('document.querySelector("#send-msg").disabled'), false);
 
     modelBehavior = "ok";
-    await live.evaluate('__mo.sendPrompt(__mo.active(), "Browser Cookies")');
-    assert.equal(await live.evaluate("__mo.active().dish"), "browser-cookies");
+    await live.evaluate('__mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
+    assert.equal(await live.evaluate("__mo.active().dish"), "cookies-code-scanning-shake");
     assert.equal(await live.evaluate("__mo.active().status"), "ordering");
     assert.equal(await live.evaluate("__mo.active().prs.length"), 0);
     assert.deepEqual(await live.evaluate("__mo.active().set"), []);
     await live.evaluate("__mo.help(__mo.active()); __mo.renderAll()");
-    assert.deepEqual(await live.evaluate("__mo.active().flag"), ["headless"]);
+    assert.deepEqual(await live.evaluate("__mo.active().flag"), ["no-callback-cream"]);
     await live.evaluate(`(() => {
-      __mo.toggle(__mo.active(), "headless"); __mo.renderAll();
+      __mo.toggle(__mo.active(), "no-callback-cream"); __mo.renderAll();
       document.querySelector('[data-act="approve"]').click();
     })()`);
     assert.equal(await live.evaluate("__mo.active().status"), "cooking");
-    assert.deepEqual(await live.evaluate("__mo.active().set"), ["headless"]);
+    assert.deepEqual(await live.evaluate("__mo.active().set"), ["no-callback-cream"]);
     await live.evaluate("__mo.pause()");
     await until(async () => {
         const saved = JSON.parse(await readFile(join(stateDirectory, "live-browser.json"), "utf8"));
@@ -655,7 +731,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     }, "Approved live plan was not checkpointed.");
     assert.equal(await live.evaluate("__mo.S.orders[0].status"), "cooking");
     assert.equal(await live.evaluate("__mo.S.timer"), null);
-    assert.deepEqual(await live.evaluate("__mo.S.orders[0].set"), ["headless"]);
+    assert.deepEqual(await live.evaluate("__mo.S.orders[0].set"), ["no-callback-cream"]);
     await live.evaluate("__mo.resume();");
     modelBehavior = "fail";
     await live.evaluate(`(() => {
@@ -669,7 +745,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await live.evaluate(`(() => {
       const o = __mo.S.orders.find(o => o.status === "line"); __mo.select(o.id);
       document.querySelector('[data-act="inputmode"][data-arg="copilot"]').click();
-      void __mo.sendPrompt(o, "Browser Cookies");
+      void __mo.sendPrompt(o, "Cookies and code scanning shake");
     })()`);
     await until(() => modelCalls > previousCalls, "Late request did not reach the provider.");
     await live.evaluate("__mo.restart()");
@@ -690,12 +766,12 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
             '[data-act="inputmode"][data-arg="copilot"]'
         )?.getAttribute("aria-pressed")`), "true",
         "DINER_LIVE_URL must select available Real Copilot input; deterministic fallback is not a live smoke test.");
-        await native.evaluate('void __mo.sendPrompt(__mo.active(), "Browser Cookies, fork the batch and make them headless")');
+        await native.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake, dark-mode scan and no callback cream")');
         await until(() => native.evaluate('!!__mo.active().dish || !!document.querySelector(\'#cp-body [role="alert"]\')'),
             "Actual extension did not finish the model request.", 450);
         assert.equal(await native.evaluate('document.querySelector(\'#cp-body [role="alert"]\')?.textContent ?? ""'), "");
-        assert.equal(await native.evaluate("__mo.active().dish"), "browser-cookies");
-        assert.deepEqual(await native.evaluate("__mo.active().set.slice().sort()"), ["fork-batch", "headless"]);
+        assert.equal(await native.evaluate("__mo.active().dish"), "cookies-code-scanning-shake");
+        assert.deepEqual(await native.evaluate("__mo.active().set.slice().sort()"), ["dark-mode-scan", "no-callback-cream"]);
         assert.equal(await native.evaluate("__mo.active().status"), "ordering");
         assert.equal(await native.evaluate("__mo.active().prs.length"), 0);
         await native.evaluate("__mo.pause()");

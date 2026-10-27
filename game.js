@@ -93,11 +93,9 @@
   const HUB = document.documentElement.classList.contains("hub");
   let hubTab = "open";
   if (HUB) {
-    const lbl = { line: "Issues", cp: "Chef", kitchen: "Pull requests" };
+    const lbl = { line: "Orders", cp: "Prep", kitchen: "Kitchen" };
     document.querySelectorAll("#m-tabs button").forEach(b => { b.firstChild.textContent = lbl[b.dataset.arg]; });
-    document.querySelector(".floor").setAttribute("aria-label", "Issues");
-    document.querySelector(".kitchen").setAttribute("aria-label", "Pull requests");
-    document.querySelector(".k-head").innerHTML = `<div class="cp-title"><b>Pull requests</b></div>`;
+    document.querySelector(".k-head").innerHTML = `<div class="cp-title"><b>Kitchen</b></div>`;
     document.addEventListener("keydown", e => {
       const r = e.target.closest?.(".hi-row[data-act]");
       if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
@@ -229,7 +227,7 @@
   }
   function approve(o) {
     if (stage(o) !== "plan") return;
-    const plan = Copilot.plan(o.dish, o.set);
+    const plan = Copilot.cookingPlan(o.dish, o.set, o.built);
     const fix = o.prs.length > 0;
     say(o, planHtml(o, dishOf(o.dish), true));
     say(o, userMsg(fix ? "✅ Approved the fix" : "✅ Approved the plan"));
@@ -293,7 +291,7 @@
       o.status = "ready"; sfx("bell"); toast(`✅ All checks passed on #${o.id}. Ready to merge!`);
       const d = dishOf(o.dish);
       say(o, checksList(o));
-      say(o, cpSay(`${food(d)}${esc(d.name)} is ready and every check is green ✅ Merge &amp; serve it from the Pull requests tab 🛎`));
+      say(o, cpSay(`${food(d)}${esc(d.name)} is ready and every check is green ✅ Merge &amp; serve it from the Kitchen tab 🛎`));
     }
   }
   // The player picks a fix for a failing check. Only one is right; wrong picks cost patience and tip.
@@ -512,7 +510,7 @@
       Object.assign(o, { status: "ordering", handed: true, dish: o.want.dish, asked: [...o.want.opts], set: [...o.want.opts], fleet: true, built: {}, prs: [] });
       o.sent = Copilot.promptText(o.dish, o.set) + " (via /fleet)";
       say(o, userMsg(`<code>${esc(o.sent)}</code>`));
-      o.pending = Copilot.plan(o.dish, o.set);
+      o.pending = Copilot.cookingPlan(o.dish, o.set);
       o.status = "cooking";
       while (o.pending.length) build(o);
       o.status = "ready"; o.failFixed = true;
@@ -587,7 +585,7 @@
     const lineEl = counterEl.querySelector(".line");
     // Fixed stools along the counter: each customer keeps their seat until they're served.
     if (!lineEl.children.length) lineEl.innerHTML = Array.from({ length: TOTAL }, (_, i) => `<div class="seat">
-      <span class="place" aria-hidden="true">${DECOR[i] ? `<img class="decor" src="assets/diner/${DECOR[i]}.svg" alt="" draggable="false">` : ""}<img class="dish-spot" src="assets/diner/plate.svg" alt="" draggable="false"><img class="dish-food" alt="" draggable="false">${FEATURES.tips ? `<img class="cash" src="assets/diner/cash.svg" alt="" draggable="false">` : ""}</span>
+      <span class="place" aria-hidden="true">${DECOR[i] ? `<img class="decor" src="assets/diner/${DECOR[i]}.svg" alt="" draggable="false">` : ""}<img class="dish-spot" src="assets/diner/plate.svg" alt="" draggable="false"><span class="dish-food"></span>${FEATURES.tips ? `<img class="cash" src="assets/diner/cash.svg" alt="" draggable="false">` : ""}</span>
       <span class="stool" aria-hidden="true"><span class="sitter"></span></span></div>`).join("");
     [...lineEl.children].forEach((seat, i) => {
       const o = people.find(p => p.seat === i);
@@ -602,8 +600,8 @@
       const stool = seat.querySelector(".stool");
       if (o && o.status !== "served") { stool.dataset.act = "order"; stool.dataset.arg = o.id; } else delete stool.dataset.act;
       const eating = !!o && o.status === "served", meal = seat.querySelector(".dish-food");
-      if (eating && !meal.getAttribute("src")) meal.src = `assets/food/${dishOf(o.dish).art}.svg`;
-      if (!eating && meal.getAttribute("src")) meal.removeAttribute("src");
+      const mealHtml = eating ? food(dishOf(o.dish)) : "";
+      if (meal.innerHTML !== mealHtml) meal.innerHTML = mealHtml;
       seat.classList.toggle("eating", eating);
       seat.classList.toggle("leaving", !!o && !!o.leaving);
       seat.classList.toggle("thanks", !!o && !!o.thanks);
@@ -724,8 +722,9 @@
   // Plate preview: one illustration per step (assets/food/plating), swapped in as each PR lands.
   // The figure lives outside the card's re-rendered HTML so the swap animates only when the step changes.
   function plateStage(o, d) {
-    const n = d.steps.length, total = o.prs.length + o.pending.length;
+    const n = d.recipeSteps, total = o.prs.length + o.pending.length;
     const k = ["ready", "checks", "failing", "deploying"].includes(o.status) ? n : Math.min(n, Math.floor(o.prs.length / Math.max(1, total) * n));
+    if (!d.art && k > 0) return { k, src: null };
     return { k, src: k === 0 ? "assets/food/plating/plate.svg" : k === n ? `assets/food/${d.art}.svg` : `assets/food/plating/${d.art}-${k}.svg` };
   }
   function animatePlate(el, o) {
@@ -733,25 +732,27 @@
     let fig = el._plateEl;
     if (!fig) {
       fig = el._plateEl = document.createElement("figure");
-      fig.innerHTML = `<div class="kp-art"></div><figcaption></figcaption><img class="kp-qc" alt="" draggable="false">`;
-      for (let k = 1; k < d.steps.length; k++) new Image().src = `assets/food/plating/${d.art}-${k}.svg`;
+      fig.innerHTML = `<div class="kp-art"></div><figcaption></figcaption><img class="kp-qc" src="assets/food/plating/qc.svg" alt="" draggable="false">`;
+      if (d.art) for (let k = 1; k < d.recipeSteps; k++) new Image().src = `assets/food/plating/${d.art}-${k}.svg`;
     }
     if (slot) slot.replaceWith(fig);
     const { k, src } = plateStage(o, d);
-    const cap = o.status === "checks" ? "Plated! Running checks…" : o.status === "failing" ? "On hold: a check failed" : o.status === "deploying" ? "Heading to the table…" : o.status === "ready" ? "Plated! Ready to serve" : o.status === "returned" ? "Sent back · needs a fix" : `Plating… step ${k}/${d.steps.length}`;
+    const cap = o.status === "checks" ? "Plated! Running checks…" : o.status === "failing" ? "On hold: a check failed" : o.status === "deploying" ? "Heading to the table…" : o.status === "ready" ? "Plated! Ready to serve" : o.status === "returned" ? "Sent back · needs a fix" : `Plating… step ${o.prs.length}/${o.prs.length + o.pending.length}`;
     fig.className = `k-plate ${o.status}`;
     fig.setAttribute("aria-label", `Plate preview: ${cap}`);
     fig.children[1].textContent = cap;
     const qc = o.status === "failing" ? "qc-fail" : o.status === "checks" ? "qc" : "";
     const qcImg = fig.children[2];
     if (qcImg._k !== qc) { qcImg._k = qc; if (qc) qcImg.src = `assets/food/plating/${qc}.svg`; qcImg.classList.toggle("on", !!qc); }
-    if (fig._src === src) return;
+    const visual = src || d.emoji;
+    if (fig._src === visual) return;
     const art = fig.firstChild, first = !fig._src;
-    fig._src = src;
+    fig._src = visual;
     [...art.children].forEach(img => { img.classList.add("out"); setTimeout(() => img.remove(), 450); });
-    const img = new Image();
-    img.className = first ? "kp-img" : "kp-img in";
-    img.alt = ""; img.draggable = false; img.src = src;
+    const img = src ? new Image() : document.createElement("span");
+    img.className = `kp-img${first ? "" : " in"}${src ? "" : " kp-emoji"}`;
+    if (src) { img.alt = ""; img.draggable = false; img.src = src; }
+    else { img.textContent = d.emoji; img.setAttribute("aria-hidden", "true"); }
     img.addEventListener("animationend", () => img.classList.remove("in"), { once: true });
     art.appendChild(img);
   }
@@ -804,7 +805,9 @@
   }
   let paneKey = "", openKey = "";
 
-  const food = (d, size = "") => `<img class="food ${size}" src="assets/food/${d.art}.svg" alt="" aria-hidden="true" draggable="false">`;
+  const food = (d, size = "") => d.art
+    ? `<img class="food ${size}" src="assets/food/${d.art}.svg" alt="" aria-hidden="true" draggable="false">`
+    : `<span class="food food-emoji ${size}" aria-hidden="true">${esc(d.emoji)}</span>`;
   const cpSay = html => `<div class="msg bot"><span class="avatar cp">${cpIcon(14)}</span><div class="bubble">${html}</div></div>`;
   const userMsg = html => `<div class="msg user"><div class="bubble">${html}</div></div>`;
   const custMsg = (o, html) => `<div class="msg cust"><span class="avatar cust-av">${o.face}</span><div class="bubble"><small>@${esc(first(o).toLowerCase())}</small>${html}</div></div>`;
@@ -865,13 +868,17 @@
 
   function promptHtml(o) {
     const dr = o.draft, dd = dr.dish && dishOf(dr.dish);
+    const categories = [...new Set(MENU.map(d => d.category))];
+    const optionChips = options => options.map(x => `<button class="chip opt ${dr.opts.includes(x.id) ? "on" : ""}" data-act="opt" data-arg="${x.id}" aria-pressed="${dr.opts.includes(x.id)}">${esc(x.alt)}</button>`).join("");
     return `<div class="chips-card">
         ${modelRequests.has(o) ? `<p role="status">Copilot is proposing a plan...</p><button class="btn ghost" data-act="cancelmodel">Cancel request</button>` : ""}
         ${modelNotices.has(o) ? `<p role="alert">${esc(modelNotices.get(o))}</p><button class="btn ghost" data-act="retrymodel">Retry prompt</button>` : ""}
-        <div class="chips-label">Dish</div>
-        <div class="chips">${MENU.map(m => `<button class="chip ${dr.dish === m.id ? "on" : ""}" data-act="dish" data-arg="${m.id}" aria-pressed="${dr.dish === m.id}">${food(m)}${esc(m.name)}</button>`).join("")}</div>
-        ${dd ? `<div class="chips-label">Details</div>
-        <div class="chips">${dd.opts.map(x => `<button class="chip opt ${dr.opts.includes(x.id) ? "on" : ""}" data-act="opt" data-arg="${x.id}" aria-pressed="${dr.opts.includes(x.id)}">${esc(x.alt)}</button>`).join("")}</div>` : ""}
+        ${categories.map(category => `<h3 class="chips-label">${esc(category)}</h3>
+        <div class="chips">${MENU.filter(m => m.category === category).map(m => `<button class="chip ${dr.dish === m.id ? "on" : ""}" data-act="dish" data-arg="${m.id}" aria-pressed="${dr.dish === m.id}">${food(m)}${esc(m.name)}</button>`).join("")}</div>`).join("")}
+        ${dd ? `<h3 class="chips-label">Details</h3>
+        <div class="chips">${optionChips(dd.opts.filter(x => !x.addon))}</div>
+        ${dd.opts.some(x => x.addon) ? `<h3 class="chips-label">Secret Sauces</h3>
+        <div class="chips">${optionChips(dd.opts.filter(x => x.addon))}</div>` : ""}` : ""}
       </div>`;
   }
 
@@ -893,7 +900,7 @@
     }).join("");
     const tip = assumed && !frozen ? ` Tap <b>Change</b> on a step to pick a different version.` : "";
     return cpSay(fix ? `Here's the updated plan.${frozen ? "" : " Tap <b>Change</b> on the step that's wrong, then approve the fix."}`
-      : `Here's my plan for ${food(d)}<b>${esc(d.name.toLowerCase())}</b>: ${steps.length} PRs, bottom to top.${assumed ? ` I made <b>${assumed} assumption${assumed > 1 ? "s" : ""}</b>.` : ""}${tip}`) + `
+      : `Here's my plan for ${food(d)}<b>${esc(d.name.toLowerCase())}</b>: ${Copilot.cookingPlan(o.dish, o.set, o.built).length} PRs, bottom to top.${assumed ? ` I made <b>${assumed} assumption${assumed > 1 ? "s" : ""}</b>.` : ""}${tip}`) + `
       <div class="plan card${frozen ? " frozen" : ""}"><div class="plan-head">${food(d, "lg")}Plan · ${esc(d.name)}${frozen ? ` <span class="tag asked">approved</span>` : ""}</div><ol class="steps">${rows}</ol>
         ${frozen ? "" : `<div class="plan-acts"><button class="btn ghost" data-act="reprompt">Edit prompt</button>
         <button class="btn primary" data-act="approve">${fix ? "Approve fix" : "Approve plan"}</button></div>`}</div>`;

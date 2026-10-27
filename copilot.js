@@ -26,8 +26,12 @@
       return d.steps.map(([emoji, title], i) => {
         const o = d.opts.find(x => x.step === i);
         const on = !!o && set.includes(o.id);
-        return { i, emoji, title: on ? o.to : title, opt: o ? o.id : null, on };
+        return { i, emoji, title: on ? o.to : title, opt: o ? o.id : null, on, addon: !!o?.addon };
       });
+    }
+    // Keep omitted sauces reviewable, but only cook selected add-ons or remove one already built.
+    function cookingPlan(dishId, set, built = {}) {
+      return plan(dishId, set).filter(step => !step.addon || step.on || Object.hasOwn(built, step.i));
     }
 
     // What the customer actually wants vs. what the plan will make.
@@ -36,7 +40,7 @@
       if (order.dish !== order.want.dish) return { dish: true, opts: [] };
       return { dish: false, opts: d.opts.filter(o => set.includes(o.id) !== order.want.opts.includes(o.id)) };
     }
-    return { MENU, DISHES, dishOf, parse, promptText, plan, diff };
+    return { MENU, DISHES, dishOf, parse, promptText, plan, cookingPlan, diff };
   }
 
   const source = root.Menu || require("./orders.js");

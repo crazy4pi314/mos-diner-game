@@ -57,12 +57,12 @@
 
 <div class="shell no-order">
   <!-- LEFT: the line. Customers queue up; the one at the front tells you their order. -->
-  <section class="pane floor" aria-label="The line">
+  <section class="pane floor" aria-label="Orders">
     <div class="counter" id="counter"></div>
   </section>
 
   <!-- CENTER: Copilot, your cook. Write the prompt and review the plan. -->
-  <section class="pane cp-pane" aria-label="Copilot">
+  <section class="pane cp-pane" aria-label="Prep">
     <header class="cp-head" id="cp-head"></header>
     <div class="cp-empty">
       <div class="empty-icon">🛎</div>
@@ -79,14 +79,14 @@
   </section>
 
   <!-- RIGHT: the kitchen. Approved plans cook here as PR stacks; merge them to serve. -->
-  <section class="pane kitchen" aria-label="The kitchen">
+  <section class="pane kitchen" aria-label="Kitchen">
     <header class="k-head"><span class="k-icon">🍳</span><div class="cp-title"><b>Kitchen</b><span class="cp-sub">PR stacks</span></div></header>
     <div class="k-body" id="kitchen" aria-live="polite"></div>
   </section>
 </div>
 <nav class="m-tabs" id="m-tabs" aria-label="Views">
-  <button data-act="view" data-arg="line" class="on">🧍 Line</button>
-  <button data-act="view" data-arg="cp">✨ Chef<span class="badge" id="cp-badge"></span></button>
+  <button data-act="view" data-arg="line" class="on">🧍 Orders</button>
+  <button data-act="view" data-arg="cp">✨ Prep<span class="badge" id="cp-badge"></span></button>
   <button data-act="view" data-arg="kitchen">🍳 Kitchen<span class="badge" id="k-badge"></span></button>
 </nav>
 
