@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Golden grilled cheese</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-bowl"><path d="M108 108 H184 Q184 146 146 146 Q108 146 108 108 Z"/></clipPath>
+    <clipPath id="c-top"><path d="M22 118 L150 118 L52 60 Z"/></clipPath>
+    <clipPath id="c-bot"><rect x="22" y="140" width="128" height="18" rx="5"/></clipPath>
+    <clipPath id="c-tb"><rect x="22" y="116" width="128" height="17" rx="5"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="#f6ead8"/>
+    <g clip-path="url(#c-plate)" stroke="none"><ellipse cx="100" cy="182" rx="84" ry="14" fill="#e4d0b4"/><ellipse cx="100" cy="182" rx="84" ry="14" fill="url(#dots)"/></g>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="none"/>
+    <rect x="22" y="140" width="128" height="18" rx="5" fill="#f8e2b0"/>
+    <g clip-path="url(#c-bot)" stroke="none"><rect x="16" y="151" width="140" height="10" fill="#cf8c45"/><rect x="16" y="151" width="140" height="10" fill="url(#dots)"/></g>
+    <rect x="22" y="140" width="128" height="18" rx="5" fill="none"/>
+    <path d="M18 131 H154 L156 141 Q156 145 150 144 L128 142 Q126 160 118 160 Q110 160 110 142 H64 Q62 154 56 154 Q50 154 50 142 L24 144 Q16 145 18 138 Z" fill="#f7c948"/>
+    <path d="M118 148 v5 M56 146 v2" stroke="#fff1bd" stroke-width="3"/>
+    <rect x="22" y="116" width="128" height="17" rx="5" fill="#f8e2b0"/>
+    <g clip-path="url(#c-tb)" stroke="none"><rect x="16" y="112" width="140" height="7" fill="#cf8c45"/><rect x="16" y="112" width="140" height="7" fill="url(#dots)"/></g>
+    <rect x="22" y="116" width="128" height="17" rx="5" fill="none"/>
+    <path d="M36 126 h2 M60 124 h2 M84 127 h2 M108 124 h2 M130 127 h2 M44 150 h2 M86 151 h2 M136 150 h2" stroke="#e2c58f" stroke-width="3"/>
+    <path d="M22 118 L150 118 L52 60 Z" fill="#efb768"/>
+    <g clip-path="url(#c-top)" stroke="none">
+      <path d="M22 118 L150 118 L52 60 Z" fill="none" stroke="#cf8c45" stroke-width="16"/>
+      <path d="M44 106 L74 76 M64 114 L90 88 M88 116 L104 100" stroke="#b5733a" stroke-width="5" opacity=".8"/>
+    </g>
+    <path d="M22 118 L150 118 L52 60 Z" fill="none"/>
+    <path d="M70 54 q-6 -8 0 -16 q6 -8 0 -16 M88 58 q-6 -8 0 -16 q6 -8 0 -16" stroke="#b9b0c4" stroke-width="4" fill="none" opacity=".9"/>
+  </g>
+</svg>

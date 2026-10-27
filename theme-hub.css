@@ -1,0 +1,237 @@
+/* ==========================================================================
+   Option B: "Hub" view. A plain GitHub Issues skin over the same game.
+   Opt-in: add ?ui=hub to the URL (sets <html class="hub">).
+   ========================================================================== */
+html:not(.hub) .hub-crumb { display: none; }
+
+html.hub {
+  color-scheme: light;
+  --cp-bg: #f6f8fa; --cp-bg-elevated: #ffffff; --cp-surface: #ffffff; --cp-surface-soft: #f6f8fa;
+  --cp-border: #d1d9e0; --cp-border-strong: #818b98; --cp-text: #1f2328; --cp-text-muted: #59636e;
+  --cp-text-soft: #59636e; --cp-accent: #0969da; --cp-accent-hover: #0550ae;
+  --cp-accent-soft: #ddf4ff; --cp-accent-fg: #ffffff; --cp-success: #1a7f37;
+  --cp-danger: #cf222e; --cp-warning: #9a6700; --cp-link: #0969da;
+  --cp-shadow: 0 8px 24px rgba(140, 149, 159, .2); --cp-highlight: #ddf4ff;
+  --hub-head: #f6f8fa; --hub-head-fg: #1f2328; --hub-open: #1a7f37; --hub-closed: #8250df;
+  --hub-hover: #f6f8fa; --hub-sel: #ddf4ff;
+}
+html.hub[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #0d1117; --cp-bg-elevated: #151b23; --cp-surface: #0d1117; --cp-surface-soft: #151b23;
+  --cp-border: #3d444d; --cp-border-strong: #656c76; --cp-text: #f0f6fc; --cp-text-muted: #9198a1;
+  --cp-text-soft: #9198a1; --cp-accent: #4493f8; --cp-accent-hover: #74b9ff;
+  --cp-accent-soft: rgba(56, 139, 253, .15); --cp-accent-fg: #ffffff; --cp-success: #3fb950;
+  --cp-danger: #f85149; --cp-warning: #d29922; --cp-link: #4493f8;
+  --cp-shadow: 0 8px 24px rgba(1, 4, 9, .8); --cp-highlight: rgba(56, 139, 253, .15);
+  --hub-head: #010409; --hub-head-fg: #f0f6fc; --hub-open: #3fb950; --hub-closed: #ab7df8;
+  --hub-hover: #151b23; --hub-sel: rgba(56, 139, 253, .12);
+}
+html.hub body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; }
+
+/* ---------- Header: a repo breadcrumb, not a neon awning ---------- */
+html.hub .checker { display: none; }
+html.hub .titlebar {
+  background: var(--booth-pink); color: #fff; border-bottom: 1px solid var(--cp-border);
+  border-top-color: var(--booth-pink); height: 56px;
+}
+html.hub .titlebar .neon { display: none; }
+html.hub .hub-crumb { display: flex; align-items: center; gap: 8px; font-size: 16px; min-width: 0; white-space: nowrap; }
+html.hub .hub-crumb svg { flex: none; }
+html.hub .hub-owner { color: var(--cp-text); }
+html.hub .hub-sep { color: var(--cp-text-muted); }
+html.hub .hud .chip {
+  background: var(--cp-surface); color: var(--cp-text); border: 1px solid var(--cp-border);
+  border-radius: 6px; font-weight: 600; padding: 3px 10px;
+}
+html.hub .timer-bar { background: var(--cp-surface-soft); }
+html.hub .timer-bar i { background: var(--hub-open); }
+html.hub .timer.low .timer-bar i { background: var(--cp-danger); }
+html.hub .side-toggle { color: var(--cp-text-muted); border: 1px solid var(--cp-border); border-radius: 6px; }
+html.hub .side-toggle:hover { background: var(--cp-surface-soft); }
+
+/* ---------- Layout: a wider issues list on the left ---------- */
+html.hub .shell { grid-template-columns: minmax(300px, 400px) minmax(320px, 1fr) minmax(260px, 360px); }
+html.hub:not(.tabbed) .shell { grid-template-rows: auto minmax(0, 1fr) auto; }
+html.hub:not(.tabbed) .floor { grid-column: 1; grid-row: 1 / 4; }
+html.hub:not(.tabbed) .cp-pane, html.hub:not(.tabbed) .kitchen {
+  grid-row: 1 / 4; display: grid; grid-template-rows: subgrid; grid-template-columns: minmax(0, 1fr);
+}
+html.hub:not(.tabbed) .cp-pane { grid-column: 2; }
+html.hub:not(.tabbed) .kitchen { grid-column: 3; }
+html.hub:not(.tabbed) .cp-head, html.hub:not(.tabbed) .k-head { grid-row: 1; }
+html.hub:not(.tabbed) .cp-body, html.hub:not(.tabbed) .cp-empty { grid-row: 2; }
+html.hub:not(.tabbed) .composer { grid-row: 3; }
+html.hub:not(.tabbed) .k-body { grid-row: 2 / 4; }
+html.hub.tabbed .shell { grid-template-columns: 1fr; }
+html.hub .floor { background: var(--cp-bg-elevated); }
+html.hub .counter { padding: 16px; scrollbar-color: auto; background: none; }
+html.hub .counter::-webkit-scrollbar { width: auto; }
+html.hub .counter::-webkit-scrollbar-thumb { background: var(--cp-border-strong); }
+html.hub .counter::before, html.hub .counter::after { display: none; }
+
+/* ---------- The issues list ---------- */
+.hi-box { border: 1px solid var(--cp-border); border-radius: 6px; background: var(--cp-surface); overflow: visible; }
+.hi-head { display: flex; gap: 4px; padding: 8px 12px; background: var(--cp-surface-soft); border-bottom: 1px solid var(--cp-border); }
+.hi-tab {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 6px 8px; border-radius: 6px;
+  color: var(--cp-text-muted); font-size: 14px; min-height: 36px;
+}
+.hi-tab.on { color: var(--cp-text); font-weight: 600; }
+.hi-tab:hover { background: var(--cp-border); }
+.hi-tab svg { width: 16px; height: 16px; }
+.hi-list { list-style: none; margin: 0; padding: 0; }
+.hi-box.zigzag-bottom { margin-bottom: 8px; }
+.hi-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--cp-border);
+  cursor: pointer;
+}
+.hi-row.arriving { animation: order-up .45s cubic-bezier(.2, 1.2, .4, 1) both; }
+@keyframes order-up { from { transform: translateX(100%); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .hi-row.arriving { animation: none; }
+}
+.hi-row:first-child { border-top: 0; }
+.hi-row:hover { background: var(--hub-hover); }
+.hi-row.sel { background: var(--hub-sel); box-shadow: inset 2px 0 0 var(--cp-accent); }
+.hi-row.done { cursor: default; }
+.hi-row:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: -2px; }
+.hi-ic { flex: none; padding-top: 2px; }
+.hi-ic svg { width: 16px; height: 16px; display: block; }
+.hi-ic.open { color: var(--hub-open); }
+.hi-ic.closed { color: var(--hub-closed); }
+.hi-main { flex: 1; min-width: 0; }
+.hi-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; line-height: 1.35; }
+.hi-title b { font-size: 15px; font-weight: 600; color: var(--cp-text); }
+.hi-row:hover .hi-title b { color: var(--cp-accent); }
+.hi-row.done:hover .hi-title b { color: var(--cp-text); }
+.hi-title .lbl { font-size: 12px; padding: 0 7px; line-height: 18px; }
+.hi-meta { margin-top: 2px; font-size: 12px; color: var(--cp-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hi-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 2px; }
+.hi-side .patience { width: 44px; margin: 0; }
+.hi-av {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--cp-surface-soft); border: 1px solid var(--cp-border); color: var(--cp-text);
+}
+.hi-empty { padding: 32px 16px; text-align: center; color: var(--cp-text-muted); }
+
+/* ---------- Center and right panes: Primer-flat ---------- */
+html.hub .cp-pane, html.hub .kitchen { background: var(--cp-bg-elevated); }
+html.hub .k-head, html.hub .cp-head { background: var(--cp-surface-soft); }
+html.hub .k-empty .empty-icon, html.hub .cp-empty .empty-icon { filter: grayscale(1); opacity: .6; }
+html.hub .k-plate.checks figcaption, html.hub .k-plate.deploying figcaption { color: #9a6700; }
+html.hub .k-plate.failing figcaption { color: #cf222e; }
+html.hub .k-plate.failing .kp-img { filter: grayscale(.7); opacity: .7; }
+
+@media (max-width: 760px) {
+  html.hub .shell { grid-template-columns: 1fr; }
+  html.hub .titlebar { height: 50px; gap: 6px; padding: 0 12px; }
+  html.hub .hud .chip { padding: 3px 6px; }
+  html.hub .hub-crumb { font-size: 15px; }
+  html.hub .hub-crumb svg { width: 24px; height: 24px; }
+  html.hub .hub-owner, html.hub .hub-sep { display: none; }
+  html.hub .counter { padding: 10px; }
+  html.hub .m-tabs { background: var(--cp-bg-elevated); }
+}
+
+/* ==========================================================================
+   Booth theme: matches the Universe booth. Navy ceiling, pink neon Octocat,
+   teal MO'S DINER sign, wood counter, checkered floor, cream booths.
+   ========================================================================== */
+html.hub, html.hub[data-theme="dark"] {
+  color-scheme: light;
+  --booth-navy: #16224f; --booth-navy-2: #22337a; --booth-pink: #D5346B; --booth-pink-d: #D5346B; --booth-pink-soft: #EEBCD7;
+  --booth-teal: #17434f; --booth-cyan: #bff6ff; --booth-wood: #5b3a29; --booth-wood-2: #7a5038;
+  --booth-cream: #faf6ef; --booth-tile-a: #f3f3f6; --booth-tile-b: #dfe0e7;
+  --cp-bg: var(--booth-tile-a); --cp-bg-elevated: var(--booth-cream); --cp-surface: #ffffff; --cp-surface-soft: #f4efe6;
+  --cp-border: #ddd5c8; --cp-border-strong: #a99c88; --cp-text: #1d1b2e; --cp-text-muted: #625a6e; --cp-text-soft: #625a6e;
+  --cp-accent: var(--booth-pink); --cp-accent-hover: #642033; --cp-accent-soft: var(--booth-pink-soft); --cp-accent-fg: #ffffff;
+  --cp-link: var(--booth-pink); --cp-highlight: var(--booth-pink-soft);
+  --hub-head: var(--booth-navy); --hub-head-fg: #ffffff; --hub-hover: #faf3f5; --hub-sel: var(--booth-pink-soft);
+}
+html.hub .titlebar {
+  border-bottom: 4px solid var(--booth-wood);
+}
+html.hub .hub-crumb svg { color: var(--booth-pink); }
+html.hub .hub-owner, html.hub .hub-repo { color: #fff; }
+html.hub .hub-sep { color: rgba(255, 255, 255, .55); }
+html.hub .hub-sign {
+  font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; font-size: 14px; color: var(--booth-cyan);
+  background: var(--booth-teal); border: 2px solid #2d6b7a; border-radius: 6px; padding: 3px 10px; margin-right: 6px;
+  text-shadow: 0 0 6px rgba(120, 230, 255, .9); box-shadow: 0 0 12px rgba(80, 200, 230, .35);
+}
+html.hub .hud .chip { background: rgba(255, 255, 255, .1); color: #fff; border-color: rgba(255, 255, 255, .25); }
+html.hub .timer-bar { background: rgba(255, 255, 255, .2); }
+html.hub .timer-bar i { background: var(--booth-pink); }
+html.hub .side-toggle { color: #fff; border-color: rgba(255, 255, 255, .25); }
+html.hub .side-toggle:hover { background: rgba(255, 255, 255, .12); }
+
+/* Checkered floor behind the issues list; the list sits on it like a booth table. */
+html.hub .floor {
+  background: repeating-conic-gradient(var(--booth-tile-a) 0 25%, var(--booth-tile-b) 0 50%) 0 0 / 48px 48px;
+}
+html.hub .hi-box { box-shadow: 0 6px 18px rgba(22, 34, 79, .14); border-color: var(--cp-border); }
+html.hub .hi-head { background: var(--booth-cream); border-bottom: 3px solid var(--booth-pink); }
+html.hub .hi-tab.on { color: var(--booth-navy); }
+html.hub .hi-tab:hover { background: var(--cp-accent-soft); }
+html.hub .hi-row.sel { box-shadow: inset 3px 0 0 var(--booth-pink); }
+html.hub .hi-av.cp { background: var(--booth-navy); color: #fff; border-color: var(--booth-navy); }
+
+/* Counter-front wood under the pane headers. */
+html.hub .k-head, html.hub .cp-head { background: var(--booth-cream); border-bottom: 3px solid var(--booth-wood); }
+html.hub .cp-pane, html.hub .kitchen { border-left-color: #cfc5b5; }
+html.hub .btn.primary { background: var(--booth-pink-d); border-color: var(--booth-pink-d); color: #fff; }
+html.hub .btn.primary:hover { background: #642033; }
+html.hub .m-tabs { background: var(--booth-navy); border-top: 3px solid var(--booth-wood); }
+html.hub .m-tabs button { color: rgba(255, 255, 255, .7); }
+html.hub .m-tabs button.on { color: #fff; box-shadow: inset 0 3px 0 var(--booth-pink); }
+
+@media (max-width: 760px) {
+  html.hub .hub-sign { font-size: 12px; letter-spacing: 1px; padding: 2px 8px; }
+  html.hub .hub-repo { display: none; }
+}
+
+/* ---------- SDLC: Actions + GHAS checks (Hub view only) ---------- */
+html:not(.hub) .hub-only { display: none !important; }
+.lbl.checks { border-color: #e6c46b; background: #fff8e1; color: #7d5300; }
+.lbl.failing { border-color: #ffc1ba; background: #ffebe9; color: #b3101f; }
+
+.ck-box { margin: 8px 12px 4px; border: 1px solid var(--cp-border); border-radius: 6px; background: var(--cp-surface); overflow: hidden; }
+.cp-body .ck-box { margin: 0 0 0 34px; }
+.ck-head { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; background: var(--cp-surface-soft); border-bottom: 1px solid var(--cp-border); }
+.ck-head span { color: var(--cp-text-muted); font-weight: 500; }
+.ck-list { list-style: none; margin: 0; padding: 2px 0; }
+.ck { display: grid; grid-template-columns: 16px 1fr; column-gap: 8px; padding: 4px 10px; font-size: 12px; align-items: baseline; }
+.ck-ic { font-weight: 700; text-align: center; }
+.ck-name { min-width: 0; }
+.ck-diner { grid-column: 2; color: var(--cp-text-muted); font-size: 11px; }
+.ck.pass .ck-ic { color: #1a7f37; }
+.ck.fail .ck-ic, .ck-ic.fail { color: #cf222e; }
+.ck.fail { background: #ffebe9; }
+.ck.running .ck-ic { color: #bf8700; animation: ck-blink 1s ease-in-out infinite; }
+.ck.queued { color: var(--cp-text-muted); }
+@keyframes ck-blink { 50% { opacity: .3; } }
+
+.ck-fail { margin: 8px 0 12px; border: 1px solid #ff8182; border-radius: 6px; background: var(--cp-surface); overflow: hidden; }
+.ck-fail-head { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: #ffebe9; border-bottom: 1px solid #ff8182; }
+.ck-fail-head .ck-ic { font-size: 16px; line-height: 1.2; }
+.ck-fail-head b { display: block; font-size: 14px; }
+.ck-fail-head span { font-size: 12px; color: var(--cp-text-muted); }
+.ck-log {
+  margin: 0; padding: 10px 12px; background: #0d1117; color: #e6edf3; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap; word-break: break-word;
+}
+.ck-fail .chips-label { padding: 10px 12px 0; }
+.ck-fixes { display: flex; flex-direction: column; gap: 8px; padding: 8px 12px 12px; }
+.ck-fix {
+  text-align: left; padding: 10px 12px; min-height: 44px; border-radius: 6px; border: 1px solid var(--cp-border);
+  background: var(--cp-surface); color: var(--cp-text); font-weight: 600;
+}
+.ck-fix:hover:not(:disabled) { border-color: var(--cp-accent); background: var(--cp-accent-soft); }
+.ck-fix.hint { border-color: var(--cp-accent); box-shadow: 0 0 0 2px var(--cp-accent-soft); }
+.ck-fix.tried { cursor: default; opacity: .85; background: #ffebe9; border-color: #ffc1ba; }
+.ck-fix small { display: block; font-weight: 400; color: #82071e; margin-top: 4px; }
+.btn.danger { background: #cf222e; border-color: #cf222e; color: #fff; }
+html.hub .kitchen .plan.failing { border-color: #cf222e; }
+html.hub .kitchen .plan.checks { border-color: #bf8700; }
+/* Chat body is a flex column: don't let the failure/check panels shrink and clip their fixes */
+.cp-body > .ck-fail, .cp-body > .ck-box { flex: none; }

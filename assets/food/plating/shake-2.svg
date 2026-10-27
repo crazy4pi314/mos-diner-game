@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Blending the shake</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-glass"><path d="M62 70 H138 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z"/></clipPath>
+    <clipPath id="c-shake"><path d="M66 82 H134 L124 162 Q123 166 118 166 H82 Q77 166 76 162 Z"/></clipPath>
+    <clipPath id="c-cup"><path d="M66 88 H134 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="176" rx="46" ry="9" fill="#e4d0b4"/>
+    <rect x="94" y="8" width="12" height="20" rx="4" fill="#9aa3b5"/>
+    <path d="M100 28 V104" stroke-width="5"/>
+    <path d="M66 88 H134 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z" fill="#cfd5e2"/>
+    <g clip-path="url(#c-cup)" stroke="none"><rect x="60" y="150" width="80" height="26" fill="#9aa3b5"/><rect x="60" y="150" width="80" height="26" fill="url(#dots)"/></g>
+    <path d="M66 88 H134 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z" fill="none"/>
+    <path d="M80 98 L86 160" stroke="#ffffff" stroke-width="5" opacity=".9"/>
+    <path d="M66 88 H134" stroke-width="7"/>
+    <ellipse cx="100" cy="92" rx="30" ry="5" fill="#fffaf2" stroke-width="3"/>
+    <path d="M88 92 q12 -6 24 0" stroke="#ecd6b0" stroke-width="3" fill="none"/>
+    <path d="M50 104 q-8 14 0 28 M150 104 q8 14 0 28 M40 96 q-12 22 0 44 M160 96 q12 22 0 44" stroke="#8e87a6" stroke-width="4" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,179 @@
+{
+  "dishes": [
+    {
+      "id": "full-stack-pancakes",
+      "enabled": true,
+      "name": "Full-Stack Pancakes",
+      "emoji": "🥞",
+      "art": "pancakes",
+      "checks": {"ingredient": "maple-syrup", "prep": ["./preheat-griddle.sh", "Waiting for griddle to reach 375°F…"], "test": {"t": "cooks the pancakes through", "exp": "expected center temp ≥ 200°F, received 150°F (gooey middle)", "at": "griddle (kitchen/griddle.js:42)", "file": "griddle.js", "what": "cook time", "bad": "raw pancakes"}},
+      "patterns": ["full[- ]?stack pancakes?", "pancakes?", "short stack", "flapjacks?", "hotcakes?"],
+      "say": ["the full-stack pancakes", "a stack of pancakes"],
+      "steps": [["🥣", "Mix buttermilk batter"], ["🍳", "Griddle 3 pancakes"], ["🥞", "Plate the full stack"], ["🧈", "Top with butter and syrup"]],
+      "options": [
+        {"id": "raspberry-branch", "enabled": true, "alt": "raspberry branch", "step": 0, "to": "Mix batter with raspberries", "patterns": ["raspberr", "berry branch"], "say": "with the raspberry branch"},
+        {"id": "scale-out", "enabled": true, "alt": "scale out to 5 pancakes", "step": 1, "to": "Griddle 5 pancakes", "patterns": ["scale (it )?out", "five pancakes", "\\b5 pancakes"], "say": "scale it out to five"},
+        {"id": "async-syrup", "enabled": true, "alt": "async syrup", "step": 3, "to": "Top with butter, syrup on the side", "patterns": ["async syrup", "syrup async", "syrup on the side", "side of syrup"], "say": "make the syrup async"}
+      ]
+    },
+    {
+      "id": "raspberry-pi",
+      "enabled": true,
+      "name": "Raspberry Pi à la Mode",
+      "emoji": "🥧",
+      "art": "pie",
+      "checks": {"ingredient": "pie-crust", "prep": ["./warm-oven.sh", "Waiting for oven to reach 350°F…"], "test": {"t": "pours the coffee hot", "exp": "expected coffee ≥ 150°F, received 98°F", "at": "pour (kitchen/coffee.js:18)", "file": "coffee.js", "what": "brew temp", "bad": "lukewarm coffee"}},
+      "patterns": ["raspberr(y|ies) pi(e)?", "\\bpi à la mode", "\\bpie à la mode"],
+      "say": ["the Raspberry Pi à la mode", "a slice of Raspberry Pi"],
+      "steps": [["🥧", "Slice the raspberry pie"], ["♨️", "Warm it up"], ["🍨", "Add a scoop of vanilla"], ["☕", "Pour a regular Java"]],
+      "options": [
+        {"id": "apple-silicon", "enabled": true, "alt": "Apple Silicon", "step": 0, "to": "Slice the apple pie", "patterns": ["apple silicon", "apple pie"], "say": "use Apple Silicon"},
+        {"id": "cold-boot", "enabled": true, "alt": "cold boot", "step": 1, "to": "Serve it cold", "patterns": ["cold boot", "served? cold", "don'?t warm"], "say": "cold boot it"},
+        {"id": "decaf-mode", "enabled": true, "alt": "decaf mode", "step": 3, "to": "Pour a decaf Java", "patterns": ["decaf mode", "decaf"], "say": "switch the Java to decaf mode"}
+      ]
+    },
+    {
+      "id": "java-chip-shake",
+      "enabled": false,
+      "name": "Java Chip Shake",
+      "emoji": "🥤",
+      "art": "shake",
+      "checks": {"ingredient": "vanilla-bean", "prep": ["./chill-blender.sh", "Waiting for blender jar to reach 34°F…"], "test": {"t": "blends to a sippable thickness", "exp": "expected thickness ≤ 8, received 14 (the straw stands up)", "at": "blend (kitchen/blender.js:42)", "file": "blender.js", "what": "milk ratio", "bad": "shakes nobody can drink"}},
+      "patterns": ["java chip", "coffee shake", "coffee milkshake"],
+      "say": ["a Java Chip Shake", "the coffee shake"],
+      "steps": [["☕", "Scoop coffee ice cream"], ["🥛", "Blend with whole milk"], ["🍫", "Mix in chocolate chips"], ["🥤", "Top with whipped cream"]],
+      "options": [
+        {"id": "dark-mode", "enabled": true, "alt": "dark mode", "step": 0, "to": "Scoop chocolate ice cream", "patterns": ["dark mode", "chocolate ice cream"], "say": "put it in dark mode"},
+        {"id": "lightweight-runtime", "enabled": true, "alt": "lightweight runtime", "step": 1, "to": "Blend with oat milk", "patterns": ["lightweight runtime", "oat milk"], "say": "with a lightweight runtime"},
+        {"id": "no-callback", "enabled": true, "alt": "no callback", "step": 3, "to": "Pour with no whipped cream", "patterns": ["no callback", "no whipped", "without whipped"], "say": "no callback"}
+      ]
+    },
+    {
+      "id": "browser-cookies",
+      "enabled": true,
+      "name": "Browser Cookies",
+      "emoji": "🍪",
+      "art": "pancakes",
+      "checks": {"ingredient": "all-purpose-flour", "prep": ["./preheat-cookie-oven.sh", "Waiting for cookie oven to reach 350°F…"], "test": {"t": "bakes the cookies through", "exp": "expected centers: \"set\", received: \"raw dough\"", "at": "bake (kitchen/cookie-oven.js:42)", "file": "cookie-oven.js", "what": "bake time", "bad": "raw cookies"}},
+      "patterns": ["browser cookies?", "cookiecutter cookies?", "cookie cutter cookies?", "\\bcookies?\\b"],
+      "say": ["the Browser Cookies", "a batch of browser cookies"],
+      "steps": [["🥣", "Mix sugar-cookie dough"], ["🐙", "Cut Octocat-shaped cookies"], ["🔥", "Bake until golden"], ["🎨", "Finish with diner icing"]],
+      "options": [
+        {"id": "chocolate-chip-template", "enabled": true, "alt": "chocolate-chip template", "step": 0, "to": "Mix chocolate-chip dough", "patterns": ["chocolate[- ]chip template", "chocolate chips?"], "say": "use the chocolate-chip template"},
+        {"id": "fork-batch", "enabled": true, "alt": "fork the batch", "step": 1, "to": "Cut a double batch of Octocat cookies", "patterns": ["fork (the )?batch", "double batch"], "say": "fork the batch"},
+        {"id": "headless", "enabled": true, "alt": "headless", "step": 3, "to": "Serve with no icing", "patterns": ["headless", "no icing", "without icing"], "say": "make them headless"}
+      ]
+    },
+    {
+      "id": "merge-melt",
+      "enabled": false,
+      "name": "Merge Melt",
+      "emoji": "🥪",
+      "art": "grilled-cheese",
+      "checks": {"ingredient": "sharp-cheddar", "prep": ["./preheat-griddle.sh", "Waiting for griddle to reach 350°F…"], "test": {"t": "melts the cheese all the way through", "exp": "expected cheese: \"melted\", received: \"cold in the middle\"", "at": "griddle (kitchen/griddle.js:27)", "file": "griddle.js", "what": "heat", "bad": "cold grilled cheese"}},
+      "patterns": ["merge melt", "grilled cheese", "toastie"],
+      "say": ["a Merge Melt", "the Merge Melt"],
+      "steps": [["🧈", "Butter the sourdough"], ["🧀", "Layer on cheddar"], ["🔥", "Merge on the griddle until golden"], ["🍅", "Plate with tomato soup"]],
+      "options": [
+        {"id": "rebase-on-rye", "enabled": true, "alt": "rebase on rye", "step": 0, "to": "Butter the rye bread", "patterns": ["rebase on rye", "\\brye\\b"], "say": "rebase it on rye"},
+        {"id": "accept-theirs", "enabled": true, "alt": "accept theirs", "step": 1, "to": "Layer on pepper jack", "patterns": ["accept theirs", "pepper ?jack"], "say": "accept theirs for the cheese"},
+        {"id": "squash-side", "enabled": true, "alt": "squash the side", "step": 3, "to": "Plate with a side salad", "patterns": ["squash the side", "side salad", "\\bsalad\\b"], "say": "squash the side"}
+      ]
+    },
+    {
+      "id": "sha256-hash-browns",
+      "enabled": true,
+      "name": "SHA-256 Hash Browns",
+      "emoji": "🥔",
+      "art": "eggs",
+      "checks": {"ingredient": "russet-potatoes", "prep": ["./heat-hash-griddle.sh", "Waiting for hash-brown griddle to reach 375°F…"], "test": {"t": "crisps the hash browns evenly", "exp": "expected crispness ≥ 8, received 3 (soggy center)", "at": "griddle (kitchen/hash-griddle.js:42)", "file": "hash-griddle.js", "what": "griddle time", "bad": "soggy hash browns"}},
+      "patterns": ["sha[- ]?256 hash browns?", "hash browns?"],
+      "say": ["the SHA-256 Hash Browns", "an order of hash browns"],
+      "steps": [["🥔", "Shred the potatoes"], ["🧂", "Apply the diner seasoning"], ["🔥", "Griddle until crisp"], ["🍳", "Plate with a fried egg"]],
+      "options": [
+        {"id": "hash-collision", "enabled": true, "alt": "hash collision", "step": 1, "to": "Season with peppers and onions", "patterns": ["hash collision", "peppers? and onions?", "onions? and peppers?"], "say": "add a hash collision"},
+        {"id": "extra-encryption", "enabled": true, "alt": "extra encryption", "step": 2, "to": "Griddle extra crispy", "patterns": ["extra encryption", "extra crisp"], "say": "with extra encryption"},
+        {"id": "vegan-fork", "enabled": true, "alt": "vegan fork", "step": 3, "to": "Plate with sliced avocado", "patterns": ["vegan fork", "avocado", "no egg"], "say": "use the vegan fork"}
+      ]
+    },
+    {
+      "id": "pull-request-pulled-pork",
+      "enabled": false,
+      "name": "Pull Request Pulled Pork",
+      "emoji": "🥪",
+      "art": "burger",
+      "checks": {"ingredient": "smoked-pork", "prep": ["./warm-smoker.sh", "Waiting for smoker to reach 225°F…"], "test": {"t": "warms the pulled pork safely", "exp": "expected internal temp ≥ 165°F, received 125°F", "at": "warm (kitchen/smoker.js:42)", "file": "smoker.js", "what": "warm time", "bad": "cold pulled pork"}},
+      "patterns": ["pull request pulled[- ]pork", "pulled[- ]pork", "pr pork"],
+      "say": ["the Pull Request Pulled Pork", "a pulled-pork sandwich"],
+      "steps": [["🐖", "Pull the smoked pork"], ["🥫", "Apply barbecue sauce"], ["🍞", "Toast the bun"], ["🥬", "Build with slaw"], ["🥒", "Finish with pickles"]],
+      "options": [
+        {"id": "fork-it", "enabled": true, "alt": "fork it", "step": 0, "to": "Pull a double portion of pork", "patterns": ["fork it", "double pork", "double portion"], "say": "fork it"},
+        {"id": "force-push", "enabled": true, "alt": "force push", "step": 1, "to": "Apply barbecue and hot sauce", "patterns": ["force push", "hot sauce", "extra spicy"], "say": "give it a force push"},
+        {"id": "draft-mode", "enabled": true, "alt": "draft mode", "step": 3, "to": "Build the sandwich, slaw on the side", "patterns": ["draft mode", "slaw on the side"], "say": "leave the slaw in draft mode"}
+      ]
+    },
+    {
+      "id": "docker-donuts",
+      "enabled": false,
+      "name": "Docker Donuts",
+      "emoji": "🍩",
+      "art": "pancakes",
+      "checks": {"ingredient": "donut-flour", "prep": ["./heat-fryer.sh", "Waiting for fryer oil to reach 350°F…"], "test": {"t": "fries the donuts through", "exp": "expected center: \"fluffy\", received: \"raw dough\"", "at": "fry (kitchen/fryer.js:42)", "file": "fryer.js", "what": "fry time", "bad": "raw donuts"}},
+      "patterns": ["docker donuts?", "container of donuts?", "\\bdonuts?\\b"],
+      "say": ["a container of Docker Donuts", "the Docker Donuts"],
+      "steps": [["🥣", "Mix the donut dough"], ["🍩", "Cut the mini donuts"], ["✨", "Build with vanilla glaze"], ["🥜", "Top the container with nuts"]],
+      "options": [
+        {"id": "alpine-image", "enabled": true, "alt": "Alpine image", "step": 0, "to": "Mix a light cake-donut dough", "patterns": ["alpine image", "light dough"], "say": "use the Alpine image"},
+        {"id": "multi-stage-build", "enabled": true, "alt": "multi-stage build", "step": 2, "to": "Build with assorted glazes", "patterns": ["multi[- ]stage build", "assorted glazes"], "say": "make it a multi-stage build"},
+        {"id": "rootless", "enabled": true, "alt": "rootless", "step": 3, "to": "Pack the container with no nuts", "patterns": ["rootless", "no nuts", "without nuts"], "say": "run it rootless"}
+      ]
+    },
+    {
+      "id": "cache-cow-sundae",
+      "enabled": false,
+      "name": "Cache Cow Sundae",
+      "emoji": "🍨",
+      "art": "shake",
+      "checks": {"ingredient": "vanilla-ice-cream", "prep": ["./chill-sundae-glass.sh", "Waiting for sundae glass to reach 34°F…"], "test": {"t": "keeps the sundae frozen", "exp": "expected temperature ≤ 20°F, received 42°F (melting)", "at": "assemble (kitchen/sundae.js:42)", "file": "sundae.js", "what": "chill time", "bad": "melted sundaes"}},
+      "patterns": ["cache cow sundae", "cache sundae", "\\bsundae\\b"],
+      "say": ["a Cache Cow Sundae", "the hot-fudge sundae"],
+      "steps": [["🍨", "Scoop vanilla ice cream"], ["🍫", "Add hot fudge"], ["🧁", "Top with whipped cream"], ["🍒", "Complete with a cherry"]],
+      "options": [
+        {"id": "cold-cache", "enabled": true, "alt": "cold cache", "step": 1, "to": "Skip the hot fudge", "patterns": ["cold cache", "no fudge", "without fudge"], "say": "make it a cold cache"},
+        {"id": "cache-miss", "enabled": true, "alt": "cache miss", "step": 2, "to": "Add brownie pieces and whipped cream", "patterns": ["cache miss", "brownie pieces?", "brownies?"], "say": "add a cache miss"},
+        {"id": "clear-cache", "enabled": true, "alt": "clear cache", "step": 3, "to": "Serve with no cherry", "patterns": ["clear (the )?cache", "no cherry", "without (a |the )?cherry"], "say": "clear the cache"}
+      ]
+    },
+    {
+      "id": "binary-bagel",
+      "enabled": false,
+      "name": "Binary Bagel",
+      "emoji": "🥯",
+      "art": "burger",
+      "checks": {"ingredient": "everything-bagels", "prep": ["./preheat-toaster.sh", "Waiting for toaster to reach medium-high…"], "test": {"t": "toasts both bagel halves evenly", "exp": "expected browning: \"golden\", received: \"pale\"", "at": "toast (kitchen/toaster.js:42)", "file": "toaster.js", "what": "toast time", "bad": "untoasted bagels"}},
+      "patterns": ["binary bagel", "\\bbagel\\b"],
+      "say": ["a Binary Bagel", "the everything bagel"],
+      "steps": [["🥯", "Slice an everything bagel"], ["🔥", "Toast both bits"], ["🧀", "Apply cream cheese"], ["🍅", "Add tomato"], ["🔒", "Close the sandwich"]],
+      "options": [
+        {"id": "64-bit", "enabled": true, "alt": "64-bit", "step": 0, "to": "Slice two everything bagels", "patterns": ["64[- ]?bit", "double stack", "two bagels"], "say": "make it 64-bit"},
+        {"id": "encrypted", "enabled": true, "alt": "encrypted", "step": 2, "to": "Apply cream cheese and lox", "patterns": ["encrypted", "\\blox\\b"], "say": "encrypt it with lox"},
+        {"id": "headless", "enabled": true, "alt": "headless", "step": 4, "to": "Serve it open-faced", "patterns": ["headless", "open[- ]faced"], "say": "run it headless"}
+      ]
+    }
+  ],
+  "customers": [
+    ["@hungry-octocat", "🐙"],
+    ["@monalisa", "👩‍🎨"],
+    ["@hubot", "🤖"],
+    ["@ducky-dev", "🦆"],
+    ["@merge-queen", "👸"],
+    ["@rebase-randy", "🧔"],
+    ["@lgtm-lucy", "👩‍🦰"],
+    ["@nitpick-nick", "🧐"],
+    ["@shipit-squirrel", "🐿️"],
+    ["@yaml-yolanda", "👵"],
+    ["@cache-carl", "🧑‍🦲"],
+    ["@sudo-sam", "🧑‍💻"]
+  ],
+  "greetings": ["Hi! Can I get", "Hey there! I'll have", "Morning! I'd love", "Hello! Could I get", "Hiya! Just", "Hey! I'll take"]
+}

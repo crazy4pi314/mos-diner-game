@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Cherry pie with ice cream and coffee</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-mug"><path d="M120 70 H176 V128 Q176 146 158 146 H138 Q120 146 120 128 Z"/></clipPath>
+    <clipPath id="c-side"><path d="M24 150 L118 150 L118 132 L24 112 Z"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M134 58 Q128 48 134 38 Q140 28 134 18 M156 58 Q150 48 156 38 Q162 28 156 18" stroke="#b9b0c4" stroke-width="4" fill="none"/>
+    <path d="M176 84 Q196 84 196 102 Q196 120 176 120" stroke-width="13" fill="none"/>
+    <path d="M176 84 Q196 84 196 102 Q196 120 176 120" stroke-width="5" stroke="#7fb6e0" fill="none"/>
+    <path d="M120 70 H176 V128 Q176 146 158 146 H138 Q120 146 120 128 Z" fill="#8fc3ea"/>
+    <g clip-path="url(#c-mug)" stroke="none"><rect x="110" y="130" width="80" height="20" fill="#6a9fcc"/><rect x="110" y="130" width="80" height="20" fill="url(#dots)"/></g>
+    <path d="M120 70 H176 V128 Q176 146 158 146 H138 Q120 146 120 128 Z" fill="none"/>
+    <ellipse cx="148" cy="70" rx="28" ry="7" fill="#6b3f2a"/>
+    <path d="M134 98 h28" stroke="#ffffff" stroke-width="4"/>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="#f6ead8"/>
+    <g clip-path="url(#c-plate)" stroke="none"><ellipse cx="100" cy="182" rx="84" ry="14" fill="#e4d0b4"/><ellipse cx="100" cy="182" rx="84" ry="14" fill="url(#dots)"/></g>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="none"/>
+    <path d="M24 112 L94 92 L118 132 Z" fill="#f0bd70"/>
+    <path d="M58 108 q8 -4 14 2 M78 116 q8 -4 14 2" stroke="#b5652e" stroke-width="3.5" fill="none"/>
+    <path d="M24 150 L118 150 L118 132 L24 112 Z" fill="#d9454f"/>
+    <g clip-path="url(#c-side)" stroke="none"><rect x="20" y="140" width="110" height="14" fill="#b02f3c"/><rect x="20" y="140" width="110" height="14" fill="url(#dots)"/></g>
+    <path d="M24 150 L118 150 L118 132 L24 112 Z" fill="none"/>
+    <path d="M24 150 L118 150 L118 140 L24 140 Z" fill="#e9ac5f"/>
+    <circle cx="48" cy="128" r="5" fill="#8f1f2c" stroke="none"/><circle cx="82" cy="134" r="5" fill="#8f1f2c" stroke="none"/><circle cx="104" cy="128" r="4" fill="#8f1f2c" stroke="none"/>
+    <path d="M24 150 L118 150 L118 132 L24 112 Z" fill="none"/>
+    <rect x="16" y="101" width="86" height="13" rx="6.5" fill="#f3c27c" transform="rotate(-15 16 108)"/>
+    <path d="M30 104 l0 0 M48 99 l0 0 M66 94 l0 0 M84 89 l0 0" stroke="#c98a45" stroke-width="4"/>
+    <path d="M118 150 Q114 160 124 162 Q130 150 150 152 Q166 150 168 160 Q176 150 166 140 Q166 120 144 120 Q122 122 124 140 Q116 142 118 150 Z" fill="#fffaf2"/>
+    <path d="M134 132 Q142 128 150 132" stroke="#e6d9c6" stroke-width="3" fill="none"/>
+
+  </g>
+</svg>

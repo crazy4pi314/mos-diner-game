@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Vanilla scoops in a mixing cup</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-glass"><path d="M62 70 H138 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z"/></clipPath>
+    <clipPath id="c-shake"><path d="M66 82 H134 L124 162 Q123 166 118 166 H82 Q77 166 76 162 Z"/></clipPath>
+    <clipPath id="c-cup"><path d="M66 88 H134 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="176" rx="46" ry="9" fill="#e4d0b4"/>
+    <circle cx="84" cy="80" r="20" fill="#fbf0da"/>
+    <circle cx="116" cy="78" r="20" fill="#fbf0da"/>
+    <circle cx="100" cy="58" r="19" fill="#fbf0da"/>
+    <path d="M90 52 Q96 46 104 48 M74 74 Q80 68 88 70" stroke="#ecd6b0" stroke-width="3" fill="none"/>
+    <path d="M66 88 H134 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z" fill="#cfd5e2"/>
+    <g clip-path="url(#c-cup)" stroke="none"><rect x="60" y="150" width="80" height="26" fill="#9aa3b5"/><rect x="60" y="150" width="80" height="26" fill="url(#dots)"/></g>
+    <path d="M66 88 H134 L126 166 Q125 172 118 172 H82 Q75 172 74 166 Z" fill="none"/>
+    <path d="M80 98 L86 160" stroke="#ffffff" stroke-width="5" opacity=".9"/>
+    <path d="M66 88 H134" stroke-width="7"/>
+  </g>
+</svg>

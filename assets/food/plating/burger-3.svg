@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Patty with melted cheese</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-bot"><path d="M42 144 H158 Q158 164 138 164 H62 Q42 164 42 144 Z"/></clipPath>
+    <clipPath id="c-patty"><rect x="36" y="118" width="128" height="27" rx="13.5"/></clipPath>
+    <clipPath id="c-tom"><rect x="44" y="96" width="112" height="13" rx="6.5"/></clipPath>
+    <clipPath id="c-top"><path d="M38 78 Q38 26 100 26 Q162 26 162 78 Q162 86 154 86 H46 Q38 86 38 78 Z"/></clipPath>
+  </defs>
+
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="#f6ead8"/>
+    <g clip-path="url(#c-plate)" stroke="none">
+      <ellipse cx="100" cy="182" rx="84" ry="14" fill="#e4d0b4"/>
+      <ellipse cx="100" cy="182" rx="84" ry="14" fill="url(#dots)"/>
+    </g>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="none"/>
+    <g transform="translate(0 20)">
+    <rect x="36" y="118" width="128" height="27" rx="13.5" fill="#8f5642"/>
+    <g clip-path="url(#c-patty)" stroke="none">
+      <rect x="30" y="135" width="140" height="12" fill="#6c3f30"/>
+      <rect x="30" y="135" width="140" height="12" fill="url(#dots)"/>
+      <path d="M60 127 h10 M94 129 h12 M130 126 h9" stroke="#6c3f30" stroke-width="3.5"/>
+    </g>
+    <rect x="36" y="118" width="128" height="27" rx="13.5" fill="none"/>
+    <path d="M40 106 H160 L172 124 Q170 128 165 125 L150 116 H142 Q141 136 133 136 Q125 136 125 116 H84 Q83 128 77 128 Q71 128 70 116 H50 L35 125 Q30 128 28 124 Z" fill="#f7c948"/>
+    <path d="M133 122 v7 M77 119 v3" stroke="#fff1bd" stroke-width="3.5"/>
+    </g>
+  </g>
+</svg>

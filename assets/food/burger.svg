@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Cheeseburger</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-bot"><path d="M42 144 H158 Q158 164 138 164 H62 Q42 164 42 144 Z"/></clipPath>
+    <clipPath id="c-patty"><rect x="36" y="118" width="128" height="27" rx="13.5"/></clipPath>
+    <clipPath id="c-tom"><rect x="44" y="96" width="112" height="13" rx="6.5"/></clipPath>
+    <clipPath id="c-top"><path d="M38 78 Q38 26 100 26 Q162 26 162 78 Q162 86 154 86 H46 Q38 86 38 78 Z"/></clipPath>
+  </defs>
+
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Plate -->
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="#f6ead8"/>
+    <g clip-path="url(#c-plate)" stroke="none">
+      <ellipse cx="100" cy="182" rx="84" ry="14" fill="#e4d0b4"/>
+      <ellipse cx="100" cy="182" rx="84" ry="14" fill="url(#dots)"/>
+    </g>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="none"/>
+
+    <!-- Bottom bun -->
+    <path d="M42 144 H158 Q158 164 138 164 H62 Q42 164 42 144 Z" fill="#eaa95e"/>
+    <g clip-path="url(#c-bot)" stroke="none">
+      <rect x="30" y="156" width="140" height="12" fill="#cd8443"/>
+      <rect x="30" y="156" width="140" height="12" fill="url(#dots)"/>
+    </g>
+    <path d="M42 144 H158 Q158 164 138 164 H62 Q42 164 42 144 Z" fill="none"/>
+
+    <!-- Patty -->
+    <rect x="36" y="118" width="128" height="27" rx="13.5" fill="#8f5642"/>
+    <g clip-path="url(#c-patty)" stroke="none">
+      <rect x="30" y="135" width="140" height="12" fill="#6c3f30"/>
+      <rect x="30" y="135" width="140" height="12" fill="url(#dots)"/>
+      <path d="M60 127 h10 M94 129 h12 M130 126 h9" stroke="#6c3f30" stroke-width="3.5"/>
+    </g>
+    <rect x="36" y="118" width="128" height="27" rx="13.5" fill="none"/>
+
+    <!-- Melty cheese: corners droop past the patty, with drips -->
+    <path d="M40 106 H160 L172 124 Q170 128 165 125 L150 116 H142 Q141 136 133 136 Q125 136 125 116 H84 Q83 128 77 128 Q71 128 70 116 H50 L35 125 Q30 128 28 124 Z" fill="#f7c948"/>
+    <path d="M133 122 v7 M77 119 v3" stroke="#fff1bd" stroke-width="3.5"/>
+
+    <!-- Tomato -->
+    <rect x="44" y="96" width="112" height="13" rx="6.5" fill="#ec6f6a"/>
+    <g clip-path="url(#c-tom)" stroke="none"><rect x="40" y="103" width="120" height="8" fill="#cc4f4f"/></g>
+    <rect x="44" y="96" width="112" height="13" rx="6.5" fill="none"/>
+
+    <!-- Lettuce: ruffles out past the bun -->
+    <path d="M24 88 Q32 78 42 86 Q51 77 60 86 Q69 77 78 86 Q87 77 96 86 Q105 77 114 86 Q123 77 132 86 Q141 77 150 86 Q159 77 168 86 Q178 82 176 92 Q170 100 160 96 Q150 104 140 97 Q130 104 120 97 Q110 104 100 97 Q90 104 80 97 Q70 104 60 97 Q50 104 40 96 Q30 100 24 92 Z" fill="#a3d06e"/>
+    <path d="M52 92 l6 3 M88 92 l6 3 M124 92 l6 3 M156 90 l5 3" stroke="#7aa94c" stroke-width="3"/>
+
+    <!-- Top bun -->
+    <path d="M38 78 Q38 26 100 26 Q162 26 162 78 Q162 86 154 86 H46 Q38 86 38 78 Z" fill="#eaa95e"/>
+    <g clip-path="url(#c-top)" stroke="none">
+      <path d="M30 70 Q100 80 170 70 V92 H30 Z" fill="#cd8443"/>
+      <path d="M30 70 Q100 80 170 70 V92 H30 Z" fill="url(#dots)"/>
+      <path d="M58 52 Q70 38 92 35" stroke="#f8d29a" stroke-width="7" fill="none"/>
+    </g>
+    <path d="M38 78 Q38 26 100 26 Q162 26 162 78 Q162 86 154 86 H46 Q38 86 38 78 Z" fill="none"/>
+
+    <!-- Sesame seeds -->
+    <g fill="#fff6e3" stroke-width="2.2">
+      <ellipse cx="80" cy="52" rx="3.8" ry="2.4" transform="rotate(-25 80 52)"/>
+      <ellipse cx="106" cy="44" rx="3.8" ry="2.4" transform="rotate(10 106 44)"/>
+      <ellipse cx="130" cy="54" rx="3.8" ry="2.4" transform="rotate(30 130 54)"/>
+      <ellipse cx="96" cy="63" rx="3.8" ry="2.4" transform="rotate(-10 96 63)"/>
+      <ellipse cx="120" cy="68" rx="3.8" ry="2.4" transform="rotate(20 120 68)"/>
+      <ellipse cx="66" cy="68" rx="3.8" ry="2.4" transform="rotate(-35 66 68)"/>
+      <ellipse cx="144" cy="70" rx="3.8" ry="2.4" transform="rotate(35 144 70)"/>
+    </g>
+  </g>
+</svg>

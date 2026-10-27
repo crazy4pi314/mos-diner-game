@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Bowl of buttermilk batter</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-p0"><rect x="40" y="144" width="120" height="22" rx="11"/></clipPath>
+    <clipPath id="c-p1"><rect x="40" y="126" width="120" height="22" rx="11"/></clipPath>
+    <clipPath id="c-p2"><rect x="40" y="108" width="120" height="22" rx="11"/></clipPath>
+    <clipPath id="c-bowl"><path d="M30 98 H170 Q170 168 100 168 Q30 168 30 98 Z"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="174" rx="66" ry="9" fill="#e4d0b4"/>
+    <path d="M136 64 L162 18" stroke-width="13"/>
+    <path d="M136 64 L162 18" stroke-width="6" stroke="#c98a45"/>
+    <path d="M30 98 H170 Q170 168 100 168 Q30 168 30 98 Z" fill="#8fc3ea"/>
+    <g clip-path="url(#c-bowl)" stroke="none"><rect x="20" y="146" width="160" height="26" fill="#6a9fcc"/><rect x="20" y="146" width="160" height="26" fill="url(#dots)"/></g>
+    <path d="M30 98 H170 Q170 168 100 168 Q30 168 30 98 Z" fill="none"/>
+    <ellipse cx="100" cy="98" rx="70" ry="13" fill="#f6dfae"/>
+    <path d="M64 98 Q84 92 100 98 Q116 104 136 98" stroke="#e8c58a" stroke-width="3.5" fill="none"/>
+    <path d="M46 124 Q60 150 96 156" stroke="#ffffff" stroke-width="5" fill="none" opacity=".8"/>
+    <path d="M120 100 Q106 70 134 60 Q150 76 136 100 M126 100 Q120 76 134 62 Q142 78 132 100" fill="none" stroke-width="3.5"/>
+  </g>
+</svg>

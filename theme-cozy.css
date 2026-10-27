@@ -1,0 +1,224 @@
+/* ==========================================================================
+   Cozy diner skin (trial). Hand-drawn, pastel, chunky-outline storybook look.
+   Opt-in: add ?skin=cozy to the URL (sets <html class="cozy">).
+   ========================================================================== */
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("assets/fonts/fredoka-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("assets/fonts/fredoka-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("assets/fonts/fredoka-hebrew.woff2") format("woff2");
+  unicode-range: U+0307, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/dm-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/dm-mono-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+html.cozy, html.cozy[data-theme="dark"] {
+  color-scheme: light;
+  --ink: #4a3140; --ink-soft: rgba(74, 49, 64, .22);
+  --cream: #f3e4c4; --cream-2: #f8eed8; --paper: #fdf6e6; --tile: #ead6b0;
+  --rose: #D5346B; --rose-d: #7d263f; --rose-l: #EEBCD7; --rose-xl: #EEBCD7;
+  --cp-bg: var(--cream); --cp-bg-elevated: var(--cream-2); --cp-surface: var(--paper); --cp-surface-soft: #f6e9cf;
+  --cp-border: var(--ink); --cp-border-strong: var(--ink); --cp-text: var(--ink); --cp-text-muted: #7d6370;
+  --cp-text-soft: #8f7682; --cp-accent: var(--rose); --cp-accent-hover: var(--rose-d);
+  --cp-accent-soft: var(--rose-xl); --cp-accent-fg: #ffffff; --cp-success: #6fa58a;
+  --cp-danger: #7d263f; --cp-warning: #e2a94a; --cp-link: var(--rose);
+  --cp-shadow: 0 5px 0 var(--ink-soft); --cp-highlight: var(--rose-xl);
+  --line: 2.5px solid var(--ink); --pop: 0 4px 0 var(--ink-soft);
+}
+html.cozy body {
+  font-family: "Fredoka", ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", sans-serif;
+  font-weight: 500;
+  /* faint dash pattern like the floor around the diner */
+  background:
+    linear-gradient(90deg, transparent 0 46%, rgba(74,49,64,.07) 46% 54%, transparent 54%) 0 0 / 46px 28px,
+    var(--cream);
+}
+html.cozy .mono, html.cozy code, html.cozy .cmd { font-family: "DM Mono", ui-monospace, Menlo, monospace; }
+
+/* ---------- Title bar: rose awning + DINER sign ---------- */
+html.cozy .titlebar {
+  background: var(--neon-pink); color: #fff; border-bottom: var(--line);
+}
+html.cozy .side-toggle { color: var(--ink); background: var(--paper); border: 2px solid var(--ink); border-radius: 10px; }
+html.cozy .neon {
+  background: var(--paper); color: var(--rose-d); border: var(--line); border-radius: 10px;
+  padding: 0 12px 0 4px; height: 40px; box-shadow: var(--pop), inset 0 0 0 3px var(--paper), inset 0 0 0 5px var(--rose-l);
+  letter-spacing: 1.5px; text-transform: uppercase; transform: rotate(-1.5deg);
+}
+html.cozy .neon small { color: var(--ink); text-transform: none; letter-spacing: 0; }
+html.cozy .logo { height: 40px; }
+html.cozy .logo img { width: 34px; }
+html.cozy .spatulas, html.cozy .mona .octo { color: var(--rose-d); filter: none; }
+html.cozy .hud .chip {
+  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); box-shadow: 0 3px 0 var(--ink-soft);
+}
+html.cozy .timer-bar { border: 2px solid var(--ink); height: 10px; background: var(--paper); }
+html.cozy .timer-bar i { background: var(--rose); }
+html.cozy .checker { display: none; }
+
+/* ---------- Sidebar: guest notepad cards ---------- */
+html.cozy .sidebar { background: transparent; border-right: var(--line); }
+html.cozy .side-h { color: var(--rose-d); letter-spacing: 1.5px; }
+html.cozy .newbtn, html.cozy .table-item {
+  background: var(--paper); border: var(--line); border-radius: 12px; box-shadow: var(--pop);
+}
+html.cozy .table-item { margin-bottom: 10px; padding: 8px 10px; transition: transform .12s; }
+html.cozy .table-item:hover { background: var(--paper); transform: translateY(-2px) rotate(-.6deg); }
+html.cozy .table-item.active {
+  background: var(--rose-xl); box-shadow: var(--pop); transform: rotate(-1deg);
+  border-top-width: 10px; border-top-color: var(--rose);
+}
+html.cozy .table-num { background: var(--rose-l); border: 2px solid var(--ink); color: var(--ink); }
+html.cozy .table-item.active .table-num { background: var(--rose); color: var(--paper); border-color: var(--ink); }
+html.cozy .patience { height: 9px; border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); }
+html.cozy .patience i { background: var(--cp-success); }
+html.cozy .dot { border: 1.5px solid var(--ink); width: 10px; height: 10px; }
+
+/* ---------- Center: checkerboard diner floor ---------- */
+html.cozy .center {
+  background: repeating-conic-gradient(var(--cream-2) 0 25%, var(--tile) 0 50%) 0 0 / 56px 56px;
+}
+html.cozy .card { background: var(--paper); border: var(--line); border-radius: 14px; box-shadow: var(--pop); }
+/* notepad ticket with spiral binding */
+html.cozy .ticket {
+  padding-top: 34px; overflow: visible;
+  background: linear-gradient(var(--rose) 0 20px, var(--ink) 20px 22.5px, var(--paper) 22.5px);
+}
+html.cozy .ticket::before {
+  top: -10px; left: 18px; right: 18px; height: 22px; border-radius: 0;
+  background: radial-gradient(circle at 50% 70%, var(--paper) 3px, var(--ink) 3.5px 6px, transparent 6.5px) 0 0 / 22px 22px repeat-x;
+}
+html.cozy .issue-title { font-weight: 700; }
+html.cozy .state { background: var(--cp-success); color: var(--paper); border: 2px solid var(--ink); }
+html.cozy .label { background: var(--paper); border: 2px solid var(--ink); color: var(--ink); font-weight: 600; }
+html.cozy .label.hot { background: var(--rose-l); border-color: var(--ink); color: var(--ink); }
+html.cozy .label.warn { background: #f7deb0; border-color: var(--ink); color: var(--ink); }
+html.cozy .order-lines { border-top: 2px dashed var(--ink-soft); }
+html.cozy .order-lines li { border-bottom: 2px solid var(--rose-l); }
+html.cozy .order-lines input {
+  appearance: none; width: 18px; height: 18px; border: 2px solid var(--ink); border-radius: 4px; background: var(--paper); margin: 0;
+}
+html.cozy .order-lines input:checked { background: var(--rose) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3 3 7-7' fill='none' stroke='%234a3140' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat; }
+
+/* ---------- Chat: speech bubbles ---------- */
+html.cozy .avatar { border: 2px solid var(--ink); background: var(--paper); width: 32px; height: 32px; }
+html.cozy .avatar.cp { background: var(--rose-l); color: var(--ink); }
+html.cozy .bubble { border-radius: 14px; position: relative; }
+html.cozy .msg.bot .bubble { background: var(--paper); border: var(--line); box-shadow: var(--pop); }
+html.cozy .msg.bot .bubble::before {
+  content: ""; position: absolute; left: -9px; top: 10px; width: 12px; height: 12px; background: var(--paper);
+  border-left: var(--line); border-bottom: var(--line); transform: rotate(45deg);
+}
+html.cozy .msg.user .bubble { background: var(--ink); color: var(--paper); font-weight: 600; }
+html.cozy .msg.user .bubble code { background: rgba(255,255,255,.15); color: var(--paper); border-color: transparent; }
+html.cozy .who { color: var(--rose-d); }
+html.cozy .toolcall, html.cozy .hint { border: 2px dashed var(--ink-soft); background: var(--cream-2); border-radius: 10px; }
+html.cozy code, html.cozy .cmd { background: var(--rose-xl); border: 1.5px solid var(--rose-l); }
+
+/* ---------- Buttons ---------- */
+html.cozy .btn, html.cozy .qbtn, html.cozy .move button {
+  border: var(--line); box-shadow: 0 4px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+}
+html.cozy .btn { background: var(--rose); color: #fff; border-radius: 12px; font-weight: 700; }
+html.cozy .btn:hover { background: var(--rose-d); }
+html.cozy .btn.ghost { background: var(--paper); color: var(--ink); text-shadow: none; border: var(--line); }
+html.cozy .btn:active:not(:disabled), html.cozy .qbtn:active, html.cozy .move button:active:not(:disabled) {
+  transform: translateY(3px); box-shadow: 0 1px 0 var(--ink);
+}
+html.cozy .qbtn { background: var(--paper); color: var(--ink); font-weight: 600; box-shadow: 0 3px 0 var(--ink); }
+html.cozy .qbtn:hover { background: var(--rose-xl); color: var(--ink); border-color: var(--ink); }
+html.cozy .move button { background: var(--rose-l); border-radius: 10px; box-shadow: 0 3px 0 var(--ink); }
+
+/* ---------- Composer: order pad ---------- */
+html.cozy .composer { background: var(--cream-2); border-top: var(--line); }
+html.cozy .compose-box { background: var(--paper); border: var(--line); box-shadow: var(--pop); }
+html.cozy .slash-menu { background: var(--paper); border: var(--line); box-shadow: var(--pop); }
+html.cozy .slash-item.sel, html.cozy .slash-item:hover { background: var(--rose-xl); }
+
+/* ---------- Rail: PR stack as booth seats ---------- */
+html.cozy .rail, html.cozy .cp-pane { background: var(--cream-2); border-left: var(--line); }
+html.cozy .pk-ticket, html.cozy .speech, html.cozy .issue, html.cozy .plan { border: var(--line); }
+html.cozy .rail-tabs { border-bottom: var(--line); gap: 6px; padding: 10px 12px 0; }
+html.cozy .tab {
+  border: var(--line); border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--cream);
+  color: var(--cp-text-muted); margin-bottom: -2.5px;
+}
+html.cozy .tab.on { background: var(--rose); color: var(--paper); border-color: var(--ink); }
+html.cozy .branch { background: var(--paper); border: 2px solid var(--ink); }
+html.cozy .stack::before { width: 4px; left: 5px; background: repeating-linear-gradient(var(--ink) 0 6px, transparent 6px 11px); }
+html.cozy .pr {
+  background: var(--paper); border: var(--line); border-radius: 12px; box-shadow: var(--pop);
+  border-left-width: 14px; border-left-color: var(--rose);
+}
+/* booth stripes on the seat back */
+html.cozy .pr::after {
+  content: ""; position: absolute; left: -12px; top: 6px; bottom: 6px; width: 10px; border-radius: 3px;
+  background: repeating-linear-gradient(var(--rose) 0 4px, var(--rose-l) 4px 8px);
+}
+html.cozy .pr::before { left: -32px; background: var(--paper); border: 2.5px solid var(--ink); width: 12px; height: 12px; }
+html.cozy .pr:hover { transform: rotate(-.5deg); }
+html.cozy .pr.over { box-shadow: 0 0 0 3px var(--rose), var(--pop); }
+html.cozy .pr.bad { border-color: var(--cp-danger); border-left-color: var(--cp-danger); box-shadow: 0 4px 0 rgba(125,38,63,.35); animation: wobble .35s; }
+html.cozy .pr.good { border-left-color: var(--cp-success); }
+html.cozy .pr.good::after { background: repeating-linear-gradient(var(--cp-success) 0 4px, #cfe6d9 4px 8px); }
+@keyframes wobble { 25% { transform: rotate(-1.5deg); } 75% { transform: rotate(1.5deg); } }
+html.cozy .pr-num, html.cozy .pr-meta { color: var(--cp-text-muted); }
+html.cozy .pr-meta .mono { background: var(--cream-2); }
+html.cozy .station { border: 2px solid var(--ink); background: var(--rose-l); color: var(--ink); }
+html.cozy .base-node::before { background: var(--rose); border: 2px solid var(--ink); border-radius: 4px; }
+html.cozy .plate { border: var(--line); background: radial-gradient(circle, var(--paper) 55%, var(--cream-2) 56% 70%, var(--rose-l) 71%); box-shadow: var(--pop); }
+html.cozy .rail-foot { border-top: var(--line); background: var(--cream-2); }
+html.cozy .board .card { border-radius: 12px; }
+
+/* ---------- Dialogs, toast ---------- */
+html.cozy .info-dialog {
+  background: var(--paper); border: var(--line); border-radius: 0; box-shadow: 0 8px 0 var(--ink-soft);
+}
+html.cozy .info-dialog::backdrop { background: rgba(74, 49, 64, .45); }
+html.cozy .info-body .tip { background: var(--rose-xl); border: 2px dashed var(--rose-l); }
+html.cozy .name-field input { background: var(--cream-2); border: var(--line); }
+html.cozy .toast { background: var(--ink); color: var(--paper); border-radius: 14px; box-shadow: var(--pop); }
+html.cozy .cert-overlay { background: radial-gradient(circle at 50% 20%, rgba(223,135,151,.75), rgba(74,49,64,.92) 70%); }
+
+@media (max-width: 760px) {
+  html.cozy .sidebar, html.cozy .rail { background: var(--cream-2); }
+  html.cozy .neon { height: 36px; padding-right: 8px; }
+}
+@media (max-width: 370px) {
+  html.cozy .titlebar { gap: 8px; padding: 0 8px; }
+  html.cozy .neon { flex: none; padding: 0 4px; }
+  html.cozy .hud { gap: 5px; }
+  html.cozy .hud .chip { padding: 3px 6px; gap: 4px; }
+  html.cozy .timer span, html.cozy .timer-bar { display: none; }
+  html.cozy .side-toggle { width: 30px; height: 30px; padding: 4px; }
+}

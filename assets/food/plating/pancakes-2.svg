@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Three pancakes on the griddle</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-p0"><rect x="40" y="144" width="120" height="22" rx="11"/></clipPath>
+    <clipPath id="c-p1"><rect x="40" y="126" width="120" height="22" rx="11"/></clipPath>
+    <clipPath id="c-p2"><rect x="40" y="108" width="120" height="22" rx="11"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M12 116 H188 L182 146 H18 Z" fill="#6e6787"/>
+    <rect x="16" y="146" width="168" height="16" rx="4" fill="#4a4458"/>
+    <path d="M30 154 h8 M162 154 h8" stroke="#8e87a6" stroke-width="4"/>
+    <ellipse cx="48" cy="128" rx="25" ry="10" fill="#efb366"/>
+    <circle cx="40" cy="126" r="2.5" fill="#f9d9a6" stroke-width="2"/><circle cx="55" cy="130" r="2" fill="#f9d9a6" stroke-width="2"/><circle cx="50" cy="124" r="1.6" fill="#f9d9a6" stroke-width="2"/>
+    <ellipse cx="100" cy="128" rx="25" ry="10" fill="#efb366"/>
+    <circle cx="92" cy="126" r="2.5" fill="#f9d9a6" stroke-width="2"/><circle cx="107" cy="130" r="2" fill="#f9d9a6" stroke-width="2"/><circle cx="102" cy="124" r="1.6" fill="#f9d9a6" stroke-width="2"/>
+    <ellipse cx="152" cy="128" rx="25" ry="10" fill="#efb366"/>
+    <circle cx="144" cy="126" r="2.5" fill="#f9d9a6" stroke-width="2"/><circle cx="159" cy="130" r="2" fill="#f9d9a6" stroke-width="2"/><circle cx="154" cy="124" r="1.6" fill="#f9d9a6" stroke-width="2"/>
+    <path d="M60 108 q-6 -8 0 -16 q6 -8 0 -16 M78 112 q-6 -8 0 -16 q6 -8 0 -16" stroke="#b9b0c4" stroke-width="4" fill="none" opacity=".9"/>
+    <path d="M126 106 q-6 -8 0 -16 q6 -8 0 -16 M144 110 q-6 -8 0 -16 q6 -8 0 -16" stroke="#b9b0c4" stroke-width="4" fill="none" opacity=".9"/>
+  </g>
+</svg>

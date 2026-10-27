@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Buttered sourdough</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-bowl"><path d="M108 108 H184 Q184 146 146 146 Q108 146 108 108 Z"/></clipPath>
+    <clipPath id="c-top"><path d="M22 118 L150 118 L52 60 Z"/></clipPath>
+    <clipPath id="c-bot"><rect x="22" y="140" width="128" height="18" rx="5"/></clipPath>
+    <clipPath id="c-tb"><rect x="22" y="116" width="128" height="17" rx="5"/></clipPath>
+    <clipPath id="c-sa"><path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z"/></clipPath>
+    <clipPath id="c-sb"><path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="#f6ead8"/>
+    <g clip-path="url(#c-plate)" stroke="none"><ellipse cx="100" cy="182" rx="84" ry="14" fill="#e4d0b4"/><ellipse cx="100" cy="182" rx="84" ry="14" fill="url(#dots)"/></g>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="none"/>
+    <g transform="translate(-86 4)">
+    <path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z" fill="#f3dcac"/>
+    <g clip-path="url(#c-sa)" stroke="none"><rect x="96" y="138" width="90" height="20" fill="#d9b273"/><rect x="96" y="138" width="90" height="20" fill="url(#dots)"/></g>
+    <path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z" fill="none"/>
+    <path d="M120 146 V108 Q108 104 108 90 Q108 78 126 78 H148 Q166 78 166 90 Q166 104 154 108 V146 Z" fill="#fbf1dc" stroke="#d9b273" stroke-width="3"/>
+    </g>
+    <g transform="translate(-6 10)">
+    <path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z" fill="#f3dcac"/>
+    <g clip-path="url(#c-sb)" stroke="none"><rect x="96" y="138" width="90" height="20" fill="#d9b273"/><rect x="96" y="138" width="90" height="20" fill="url(#dots)"/></g>
+    <path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z" fill="none"/>
+    <path d="M120 146 V108 Q108 104 108 90 Q108 78 126 78 H148 Q166 78 166 90 Q166 104 154 108 V146 Z" fill="#fbf1dc" stroke="#d9b273" stroke-width="3"/>
+    <path d="M122 100 Q118 92 130 92 L154 92 Q164 94 158 104 Q150 112 140 106 Q130 112 122 100 Z" fill="#fde49a" stroke-width="3"/>
+    <path d="M130 82 L148 82 L152 90 L134 90 Z" fill="#fde49a"/>
+    <path d="M134 90 L152 90 L152 97 L134 97 Z" fill="#f2c95b"/>
+    </g>
+  </g>
+</svg>

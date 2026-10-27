@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t">
+  <title id="t">Sunny-side-up eggs</title>
+  <defs>
+    <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse">
+      <circle cx="2.5" cy="2.5" r="1" fill="#3b2a35" opacity=".2"/>
+    </pattern>
+    <clipPath id="c-plate"><ellipse cx="100" cy="170" rx="84" ry="18"/></clipPath>
+    <clipPath id="c-toast"><path d="M112 152 V104 Q100 102 100 88 Q100 70 124 70 H150 Q174 70 174 88 Q174 102 162 104 V152 Z"/></clipPath>
+  </defs>
+  <g stroke="#3b2a35" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="#f6ead8"/>
+    <g clip-path="url(#c-plate)" stroke="none"><ellipse cx="100" cy="182" rx="84" ry="14" fill="#e4d0b4"/><ellipse cx="100" cy="182" rx="84" ry="14" fill="url(#dots)"/></g>
+    <ellipse cx="100" cy="170" rx="84" ry="18" fill="none"/>
+    <g transform="translate(-12 34)">
+    <path d="M30 96 Q24 80 38 74 Q48 58 66 66 Q84 62 86 80 Q96 92 84 102 L40 104 Q30 104 30 96 Z" fill="#ffffff"/>
+    <circle cx="58" cy="84" r="12" fill="#f7b733"/>
+    <circle cx="54" cy="80" r="3.5" fill="#ffe7a3" stroke="none"/>
+    </g>
+    <g transform="translate(22 6)">
+    <path d="M30 148 Q22 128 40 118 Q46 98 68 104 Q88 96 94 116 Q110 124 100 144 Q96 160 74 158 Q58 166 44 158 Q30 160 30 148 Z" fill="#ffffff"/>
+    <circle cx="64" cy="132" r="14" fill="#f7b733"/>
+    <circle cx="59" cy="127" r="4" fill="#ffe7a3" stroke="none"/>
+    </g>
+  </g>
+</svg>

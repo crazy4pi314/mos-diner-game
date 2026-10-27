@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#D5346B" />
+<title>Mo's Diner · GitHub Universe 2026</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const theme = param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+    if (new URLSearchParams(window.location.search).get("skin") === "cozy") document.documentElement.classList.add("cozy");
+    // The Hub view (GitHub Issues-style) is the default; "fun" anywhere in the URL (?fun, ?ui=fun, #fun) loads the classic diner counter.
+    if (!/fun/i.test(window.location.search + window.location.hash)) document.documentElement.classList.add("hub");
+    // CSS and game navigation share this query; Hub needs room for all three columns.
+    window.dinerCompact = window.matchMedia(document.documentElement.classList.contains("hub")
+      ? "(max-width: 900px)" : "(max-width: 760px)");
+    const syncLayout = () => document.documentElement.classList.toggle("tabbed", window.dinerCompact.matches);
+    syncLayout();
+    window.dinerCompact.addEventListener("change", syncLayout);
+  })();
+</script>
+<link rel="icon" href="assets/invertocat-pink.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="theme-cozy.css" />
+<link rel="stylesheet" href="theme-hub.css" />
+</head>
+<body>
+<div class="titlebar">
+  <div class="navbar-brand">
+    <div class="brand-mark" role="img" aria-label="Mo's Diner"></div>
+  </div>
+  <div class="hud">
+    <div class="chip stat chef-chip" title="Chef" hidden><svg class="chef-hat" viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 32C4 31 0 27 0 21c0-6 4-11 10-11 2 0 4 .5 6 1.2C19 5 25 1 32 1s13 4 16 10.2c2-.7 4-1.2 6-1.2 6 0 10 5 10 11s-4 10-9 11c-6-6-14-9-23-9s-17 3-23 9Z"/><path fill="currentColor" d="M10 33c6-5 14-8 22-8s16 3 22 8l-4 14c-6-3-12-5-18-5s-12 2-18 5l-4-14Z"/></svg><b id="hud-chef"></b></div>
+    <div class="chip stat served-chip" title="Orders fulfilled">🍽 <b id="hud-served">0/3</b></div>
+    <div class="chip stat" title="Tips earned" hidden>💵 <b id="hud-tips">$0</b></div>
+    <div class="chip timer" title="Shift timer: 90 seconds">⏱ <b id="shift-time">01:30</b> <span>/ 1:30 shift</span>
+      <i class="timer-bar"><i id="shift-bar"></i></i></div>
+    <button class="side-toggle" id="info-btn" title="How to play" aria-label="How to play" aria-haspopup="dialog">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <circle cx="8" cy="8" r="6.25" />
+        <line x1="8" y1="7.2" x2="8" y2="11.2" stroke-linecap="round" />
+        <circle cx="8" cy="4.9" r=".55" fill="currentColor" stroke="none" />
+      </svg>
+    </button>
+    <button class="side-toggle" id="reset-btn" data-act="restart" title="Reset game" aria-label="Reset game">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M13 5.25A5.5 5.5 0 0 0 3.25 4" stroke-linecap="round" />
+        <path d="M3.25 1.75V4H5.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M3 10.75A5.5 5.5 0 0 0 12.75 12" stroke-linecap="round" />
+        <path d="M12.75 14.25V12H10.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div class="shell no-order">
+  <!-- LEFT: the line. Customers queue up; the one at the front tells you their order. -->
+  <section class="pane floor" aria-label="The line">
+    <div class="counter" id="counter"></div>
+  </section>
+
+  <!-- CENTER: Copilot, your cook. Write the prompt and review the plan. -->
+  <section class="pane cp-pane" aria-label="Copilot">
+    <header class="cp-head" id="cp-head"></header>
+    <div class="cp-empty">
+      <div class="empty-icon">🛎</div>
+      <h2>Waiting for customers</h2>
+      <p>When someone walks up to the counter, take their order here.</p>
+    </div>
+    <div class="cp-body" id="cp-body" aria-live="polite"></div>
+    <div class="composer" id="composer">
+      <div class="card compose-box">
+        <input id="prompt" placeholder="Tell Copilot what to make…" autocomplete="off" aria-label="Prompt for Copilot" />
+        <button class="btn" id="send-msg" aria-label="Send to Copilot">↵</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: the kitchen. Approved plans cook here as PR stacks; merge them to serve. -->
+  <section class="pane kitchen" aria-label="The kitchen">
+    <header class="k-head"><span class="k-icon">🍳</span><div class="cp-title"><b>Kitchen</b><span class="cp-sub">PR stacks</span></div></header>
+    <div class="k-body" id="kitchen" aria-live="polite"></div>
+  </section>
+</div>
+<nav class="m-tabs" id="m-tabs" aria-label="Views">
+  <button data-act="view" data-arg="line" class="on">🧍 Line</button>
+  <button data-act="view" data-arg="cp">✨ Chef<span class="badge" id="cp-badge"></span></button>
+  <button data-act="view" data-arg="kitchen">🍳 Kitchen<span class="badge" id="k-badge"></span></button>
+</nav>
+
+<div class="toast" id="toast" role="status"></div>
+
+<dialog class="info-dialog zigzag-bottom" id="info-dialog" aria-labelledby="info-title">
+  <header>
+    <h2 id="info-title">Welcome to</h2>
+    <button class="close" aria-label="Close">✕</button>
+  </header>
+  <div class="info-body">
+    <div class="welcome-logo">
+      <img src="assets/mos-lockup.svg" alt="Mo's Diner" />
+    </div>
+    <p>Fulfill <b>3 orders in 90 seconds</b> by handing them off to Copilot to get cooking!</p>
+    <label class="name-field">Your GitHub username:
+      <input id="chef-name" type="text" maxlength="39" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore="true" spellcheck="false" placeholder="octocat" />
+    </label>
+    <div id="lifecycle-status" role="alert" hidden>
+      <p id="lifecycle-message"></p>
+      <button class="btn" id="retry-loading" type="button" hidden>Retry loading</button>
+    </div>
+  </div>
+  <footer><button class="btn" id="start-shift" autofocus>Start your shift!</button></footer>
+</dialog>
+
+<dialog class="info-dialog failure-dialog zigzag-bottom" id="over-dialog" aria-labelledby="over-title">
+  <header><h2 id="over-title">Shift's over!</h2></header>
+  <div class="info-body">
+    <p><span id="over-summary">The shift ended before 3 orders were fulfilled.</span><br>Nice work keeping the diner moving!</p>
+    <div id="over-orders" class="shift-summary" aria-label="Served orders"></div>
+  </div>
+  <footer>
+    <button class="btn" data-act="restart" id="over-restart">Restart</button>
+    <button class="btn primary" data-act="summary-close" id="over-close" hidden>View certificate</button>
+  </footer>
+</dialog>
+
+<div class="cert-overlay" id="cert" role="dialog" aria-modal="true" aria-labelledby="cert-title">
+  <div class="cert-inner">
+    <div class="certificate">
+      <div class="cert-frame">
+        <img class="cert-brand" src="assets/mos-cert-logo.svg" alt="Mo's Diner" />
+        <div class="cert-title" id="cert-title">Gift Certificate</div>
+        <p class="cert-body">This certifies that</p>
+        <div class="cert-user">
+          <div class="cert-name" id="cert-name">A Very Good Chef</div>
+        </div>
+        <p class="cert-body" id="cert-body"></p>
+        <div class="cert-good">Good for one (1) Mo's Diner mug</div>
+        <p class="cert-small">Present this certificate to any Mo's Diner staff member at the booth. No cash value. Coffee refills bottomless.</p>
+        <div class="cert-date" id="cert-date"></div>
+        <div class="cert-actions"><button class="btn" data-act="restart">Play again</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="menu-file.js"></script>
+<script src="orders.js"></script>
+<script src="copilot.js"></script>
+<script src="live-plan.js"></script>
+<script src="checks.js"></script>
+<script src="snapshot.js"></script>
+<script src="lifecycle.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
