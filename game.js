@@ -1223,7 +1223,6 @@
       if (surface === observedSurface) return;
       observer.disconnect();
       observedSurface = surface;
-      visibleEntry = DinerLifecycle.createVisibilityTracker(tracksVisibility);
       observer.observe(surface);
     }
     const dialogs = new MutationObserver(observeSurface);
