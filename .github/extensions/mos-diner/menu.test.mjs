@@ -10,21 +10,29 @@ const Menu = require("../../../orders.js");
 const Copilot = require("../../../copilot.js");
 const source = JSON.parse(await readFile(new URL("../../../menu.json", import.meta.url), "utf8"));
 
-test("menu enables the fifteen requested dishes in five categories", () => {
-    assert.equal(Menu.MENU.length, 15);
+test("menu enables only the three breakfast dishes", () => {
+    assert.equal(Menu.MENU.length, 3);
     assert.deepEqual(Menu.MENU.map(dish => dish.name), [
-        "Project Planning Party Platter", "Issue Triage Taquitos with spicy summary salsa",
-        "Canvas collaboration cheese fries", "Stacked PR Pancakes",
+        "Stacked PR Pancakes",
         "Eggs your way with Copilot code review", "Bacon, eggs, and balanced code reviews",
-        "Feature-by-the-forkful franks-n-beans", "Copilot SDK fried Chicken", "Sandbox deli sandwich",
-        "Split Py soup", "End-to-end test tomato soup", "Chicken noodle unit test soup",
-        "Catch issues and banana split", "Sky-high code quality apple pie", "Cookies and code scanning shake",
     ]);
     assert.deepEqual([...new Set(Menu.MENU.map(dish => dish.category))],
-        ["Appetizers", "All Day Breakfast", "Mains", "Soup", "Dessert"]);
+        ["All Day Breakfast"]);
     for (const dish of Menu.MENU) {
         assert.equal(dish.opts.filter(option => !option.addon).length, 3, dish.id);
         assert.equal(Menu.MENU.filter(item => item.category === dish.category).length, 3);
+    }
+});
+
+test("disabled categories cannot be ordered through typed prompts or model plans", () => {
+    const LivePlan = require("../../../live-plan.js");
+    const disabled = Menu.DISHES.filter(dish => dish.enabled === false);
+    assert.equal(disabled.length, 12);
+    for (const dish of disabled) {
+        for (const text of [dish.name, ...dish.say]) {
+            assert.deepEqual(Copilot.parse(text), { dish: null, opts: [] }, text);
+        }
+        assert.throws(() => LivePlan.validate({ dish: dish.id, opts: [], note: "" }), /invalid menu plan/);
     }
 });
 
@@ -48,21 +56,29 @@ test("every dish, customer phrase and option combination parses without collisio
     }
 });
 
-test("shared sauces are optional savory add-ons, not dessert options or dishes", () => {
+test("breakfast dishes have no sauce options, requests, or cooking steps", () => {
+    const LivePlan = require("../../../live-plan.js");
+    for (const dish of Menu.MENU) {
+        assert.equal(dish.opts.length, 3);
+        assert.ok(dish.opts.every(option => !option.addon));
+        assert.equal(dish.steps.length, 4);
+        assert.equal(Copilot.cookingPlan(dish.id, []).length, 4);
+        for (const sauce of source.sauces) {
+            assert.deepEqual(Copilot.parse(`${dish.name}, ${sauce.alt}`), { dish: dish.id, opts: [] });
+            assert.throws(() => LivePlan.validate({ dish: dish.id, opts: [sauce.id], note: "" }), /invalid menu plan/);
+        }
+    }
+});
+
+test("shared sauce support remains available if explicitly re-enabled in menu data", () => {
+    const enabled = structuredClone(source);
+    enabled.sauces.forEach(sauce => { sauce.enabled = true; });
+    const compiled = Menu.compile(enabled);
     const sauceIds = source.sauces.map(sauce => sauce.id);
     assert.equal(sauceIds.length, 3);
-    for (const dish of Menu.MENU) {
-        assert.deepEqual(dish.opts.filter(option => option.addon).map(option => option.id),
-            dish.category === "Dessert" ? [] : sauceIds);
-        assert.equal(Copilot.cookingPlan(dish.id, []).length, 4);
-        if (dish.category === "Dessert") continue;
-        const all = Copilot.cookingPlan(dish.id, sauceIds);
-        assert.equal(all.length, 7);
-        assert.deepEqual(all.filter(step => step.addon).map(step => step.title), source.sauces.map(sauce => sauce.to));
-        const built = Object.fromEntries(all.map(step => [step.i, step.title]));
-        const removal = Copilot.cookingPlan(dish.id, [], built).filter(step => step.addon);
-        assert.equal(removal.length, 3);
-        assert.ok(removal.every(step => !step.on && step.title.startsWith("Serve without ")));
+    for (const dish of compiled.MENU) {
+        assert.deepEqual(dish.opts.filter(option => option.addon).map(option => option.id), sauceIds);
+        assert.equal(dish.steps.length, 7);
     }
     assert.ok(sauceIds.every(id => !Menu.MENU.some(dish => dish.id === id)));
 });
@@ -78,17 +94,19 @@ test("every configured illustration and intermediate plating asset exists", asyn
 
 test("dish and option enabled flags remove items without editing application code", () => {
     const changed = structuredClone(source);
-    changed.dishes.find(dish => dish.id === "split-py-soup").enabled = false;
+    changed.dishes.find(dish => dish.id === "bacon-eggs-balanced-reviews").enabled = false;
     changed.dishes.find(dish => dish.id === "stacked-pr-pancakes").options.find(option => option.id === "stack-another-commit").enabled = false;
-    changed.dishes.find(dish => dish.id === "cookies-code-scanning-shake").options.forEach(option => { option.enabled = false; });
+    const eggs = changed.dishes.find(dish => dish.id === "eggs-your-way");
+    eggs.options.forEach(option => { option.enabled = false; });
+    eggs.sauces = false;
     changed.sauces[0].enabled = false;
     const compiled = Menu.compile(changed);
-    assert.equal(compiled.MENU.some(dish => dish.id === "split-py-soup"), false);
+    assert.equal(compiled.MENU.some(dish => dish.id === "bacon-eggs-balanced-reviews"), false);
     assert.equal(compiled.MENU.find(dish => dish.id === "stacked-pr-pancakes").opts.some(option => option.id === "stack-another-commit"), false);
-    assert.deepEqual(compiled.MENU.find(dish => dish.id === "cookies-code-scanning-shake").opts, []);
+    assert.deepEqual(compiled.MENU.find(dish => dish.id === "eggs-your-way").opts, []);
     assert.ok(compiled.MENU.every(dish => !dish.opts.some(option => option.id === changed.sauces[0].id)));
-    assert.equal(compiled.MENU.find(dish => dish.id === "split-py-soup"), undefined);
-    assert.equal(compiled.MENU.find(dish => dish.id === "stacked-pr-pancakes").steps.length, 6);
+    assert.equal(compiled.MENU.find(dish => dish.id === "bacon-eggs-balanced-reviews"), undefined);
+    assert.equal(compiled.MENU.find(dish => dish.id === "stacked-pr-pancakes").steps.length, 4);
 });
 
 test("menu compiler rejects invalid categories, sauce definitions and option step collisions", () => {
@@ -100,7 +118,7 @@ test("menu compiler rejects invalid categories, sauce definitions and option ste
         menu => { menu.sauces[0].patterns = ["["]; },
         menu => { menu.sauces[0].alt = "@unsafe"; },
         menu => { menu.sauces[0].emoji = ""; },
-        menu => { menu.dishes[0].options[0].id = menu.sauces[0].id; },
+        menu => { menu.sauces[0].enabled = true; menu.dishes[0].options[0].id = menu.sauces[0].id; },
         menu => { menu.dishes[0].options[1].step = menu.dishes[0].options[0].step; },
     ]) {
         const changed = structuredClone(source);

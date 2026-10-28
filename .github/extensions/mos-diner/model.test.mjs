@@ -10,7 +10,7 @@ import { createModelInterpreter, sessionConfig, findRuntime, runtimeStatus } fro
 import { createDinerHost, viewQuery } from "./hosting.mjs";
 import { createStateStore } from "./state.mjs";
 
-const good = { dish: "cookies-code-scanning-shake", opts: ["dark-mode-scan", "no-callback-cream"], note: "House defaults for other details." };
+const good = { dish: "stacked-pr-pancakes", opts: ["berry-good-review", "async-syrup"], note: "House defaults for other details." };
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 test("runtime discovery validates configured and PATH executables without starting a model", async t => {
     const directory = await mkdtemp(join(tmpdir(), "diner-runtime-test-"));
@@ -76,13 +76,13 @@ test("config fails closed on unverified callbacks and discovery failures, withou
 test("strict menu validation rejects wrong-dish options, duplicates, missing fields and unsafe text", () => {
     assert.deepEqual(LivePlan.validate(good), good);
     for (const value of [null, {}, { ...good, dish: "pizza" }, { ...good, opts: ["cold-cache"] },
-        { ...good, opts: ["dark-mode-scan", "dark-mode-scan"] }, { ...good, opts: ["constructor"] },
+        { ...good, opts: ["berry-good-review", "berry-good-review"] }, { ...good, opts: ["constructor"] },
         { ...good, note: "<img onerror=alert(1)>" }, { ...good, note: "x".repeat(301) },
-        { ...good, note: "\0" }, { ...good, approve: true }, { dish: "cookies-code-scanning-shake", opts: [] }]) {
+        { ...good, note: "\0" }, { ...good, approve: true }, { dish: "stacked-pr-pancakes", opts: [] }]) {
         assert.throws(() => LivePlan.validate(value), /invalid menu plan/);
     }
     for (const text of [null, "", " ", "x".repeat(2001)]) assert.throws(() => LivePlan.validatePrompt(text));
-    assert.equal(LivePlan.validatePrompt(" Cookies and code scanning shake "), "Cookies and code scanning shake");
+    assert.equal(LivePlan.validatePrompt(" Stacked PR Pancakes "), "Stacked PR Pancakes");
     assert.equal(viewQuery({ inputMode: "deterministic" }), "");
     assert.throws(() => viewQuery({ inputMode: "copilot" }), TypeError);
     assert.throws(() => viewQuery({ inputMode: "automatic" }), TypeError);
@@ -103,7 +103,7 @@ function fakeClient(reply = JSON.stringify(good)) {
 }
 test("SDK boundary uses isolated no-tool config, structured response and cleans up without approval", async () => {
     const client = fakeClient(), abort = new AbortController();
-    assert.deepEqual(await createModelInterpreter(client)("Cookies and code scanning shake, dark-mode scan, no callback cream", abort.signal), good);
+    assert.deepEqual(await createModelInterpreter(client)("Stacked PR Pancakes, berry good review, async syrup", abort.signal), good);
     assert.deepEqual(sessionConfig.availableTools, []);
     assert.equal(sessionConfig.skipCustomInstructions, true);
     assert.equal(sessionConfig.enableSkills, false);
@@ -111,36 +111,36 @@ test("SDK boundary uses isolated no-tool config, structured response and cleans 
     assert.equal(client.calls[0][1], sessionConfig);
     assert.equal(client.calls[1][1].responseSchema, LivePlan.schema);
     assert.equal(client.calls[1][2], 30000);
-    assert.deepEqual(JSON.parse(client.calls[1][1].prompt), { playerPrompt: "Cookies and code scanning shake, dark-mode scan, no callback cream" });
+    assert.deepEqual(JSON.parse(client.calls[1][1].prompt), { playerPrompt: "Stacked PR Pancakes, berry good review, async syrup" });
     assert.deepEqual(client.calls.slice(-2), [["abort"], ["delete", "isolated"]]);
 });
 test("SDK invalid/missing/failed responses and startup failure propagate recoverably", async () => {
     for (const reply of ["not json", "null", "{}", JSON.stringify({ ...good, opts: ["cold-cache"] }), undefined]) {
         const client = fakeClient(reply);
         if (reply === undefined) client.session.sendAndWait = async () => undefined;
-        await assert.rejects(createModelInterpreter(client)("Cookies and code scanning shake", new AbortController().signal));
+        await assert.rejects(createModelInterpreter(client)("Stacked PR Pancakes", new AbortController().signal));
         assert.deepEqual(client.calls.at(-1), ["delete", "isolated"]);
     }
     const client = fakeClient();
     client.session.sendAndWait = async () => { throw new Error("Network unavailable"); };
-    await assert.rejects(createModelInterpreter(client)("Cookies and code scanning shake", new AbortController().signal), /Network unavailable/);
+    await assert.rejects(createModelInterpreter(client)("Stacked PR Pancakes", new AbortController().signal), /Network unavailable/);
     assert.equal(client.calls.at(-1)[0], "delete");
     client.createSession = async () => { throw new Error("Login unavailable"); };
-    await assert.rejects(createModelInterpreter(client)("Cookies and code scanning shake", new AbortController().signal), /Login unavailable/);
+    await assert.rejects(createModelInterpreter(client)("Stacked PR Pancakes", new AbortController().signal), /Login unavailable/);
 });
 test("cancellation before/during session creation and model completion cannot return a plan", async () => {
     const client = fakeClient(), abort = new AbortController();
     abort.abort();
-    await assert.rejects(createModelInterpreter(client)("Cookies and code scanning shake", abort.signal), { name: "AbortError" });
+    await assert.rejects(createModelInterpreter(client)("Stacked PR Pancakes", abort.signal), { name: "AbortError" });
     assert.equal(client.calls.length, 0);
     const during = new AbortController();
     client.createSession = async () => { during.abort(); return client.session; };
-    await assert.rejects(createModelInterpreter(client)("Cookies and code scanning shake", during.signal), { name: "AbortError" });
+    await assert.rejects(createModelInterpreter(client)("Stacked PR Pancakes", during.signal), { name: "AbortError" });
     assert.equal(client.calls.some(c => c[0] === "send"), false);
     assert.equal(client.calls.at(-1)[0], "delete");
     const late = new AbortController(), second = fakeClient();
     second.session.sendAndWait = async () => { late.abort(); return { data: { content: JSON.stringify(good) } }; };
-    await assert.rejects(createModelInterpreter(second)("Cookies and code scanning shake", late.signal), { name: "AbortError" });
+    await assert.rejects(createModelInterpreter(second)("Stacked PR Pancakes", late.signal), { name: "AbortError" });
     assert.equal(second.calls.at(-1)[0], "delete");
 });
 test("cancellation settles stalled session creation and disposes a late session", { timeout: 1000 }, async () => {
@@ -165,10 +165,10 @@ test("cancellation settles stalled session creation and disposes a late session"
 function checkpoint() {
     return { version: 1, view: "hub", state: {
         phase: "shift", left: 60, elapsed: 0, active: 40, pr: 101, tips: 0, banked: 0, served: 0, chef: "",
-        queue: Array.from({ length: 3 }, (_, i) => ({ at: i + 1, n: i + 1, d: "cookies-code-scanning-shake", who: ["chef", "face"] })),
-        orders: [{ id: 40, seat: 0, status: "ordering", name: "chef", face: "face", speech: "Cookies and code scanning shake", text: "Cookies and code scanning shake", sent: "", complaint: "",
+        queue: Array.from({ length: 3 }, (_, i) => ({ at: i + 1, n: i + 1, d: "stacked-pr-pancakes", who: ["chef", "face"] })),
+        orders: [{ id: 40, seat: 0, status: "ordering", name: "chef", face: "face", speech: "Stacked PR Pancakes", text: "Stacked PR Pancakes", sent: "", complaint: "",
             patience: 100, returns: 0, tip: 0, miss: 0, ci: 0, handed: false, fleet: false, failFixed: false,
-            want: { dish: "cookies-code-scanning-shake", opts: [] }, draft: { dish: null, opts: [] }, dish: null,
+            want: { dish: "stacked-pr-pancakes", opts: [] }, draft: { dish: null, opts: [] }, dish: null,
             asked: [], set: [], flag: [], tried: [], log: [], built: {}, prs: [], pending: [], checks: [],
             failKind: null, fail: null }],
     } };
@@ -197,7 +197,7 @@ test("protected plan HTTP boundary, ownership, approval, body bounds, failure an
         method: "POST", headers: { "Content-Type": "application/json", "X-Diner-Capability": config.capability, ...headers },
         body: typeof body === "string" ? body : JSON.stringify(body),
     });
-    const body = { op: "interpret", requestId: randomUUID(), owner, orderId: 40, prompt: "Cookies and code scanning shake" };
+    const body = { op: "interpret", requestId: randomUUID(), owner, orderId: 40, prompt: "Stacked PR Pancakes" };
     assert.equal((await request(body, { "X-Diner-Capability": "wrong" })).status, 403);
     assert.equal((await request(body, { Origin: "http://foreign.example" })).status, 403);
     assert.equal((await request(body, { "Sec-Fetch-Site": "cross-site" })).status, 403);

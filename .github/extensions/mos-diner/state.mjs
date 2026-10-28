@@ -8,7 +8,11 @@ export const validGameId = id => typeof id === "string" && /^[a-z0-9_-]{1,64}$/.
 export class StateError extends Error {
     constructor(status, message) { super(message); this.status = status; }
 }
-export function createStateStore(directory, now = Date.now) {
+export function createStateStore(directory, now = Date.now, {
+    renameFile = rename,
+    platform = process.platform,
+    wait = ms => new Promise(resolve => setTimeout(resolve, ms)),
+} = {}) {
     async function read(path) {
         try {
             const info = await lstat(path);
@@ -66,7 +70,16 @@ export function createStateStore(directory, now = Date.now) {
             const result = await action(data);
             if (result.write) {
                 await writeFile(temp, JSON.stringify(data), { mode: 0o600, flag: "wx" });
-                await rename(temp, path);
+                for (let attempt = 0; ; attempt++) {
+                    try {
+                        await renameFile(temp, path);
+                        break;
+                    } catch (error) {
+                        // Windows readers and scanners can briefly deny atomic replacement.
+                        if (platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(error.code) || attempt >= 5) throw error;
+                        await wait(10 * 2 ** attempt);
+                    }
+                }
             }
             return { revision: data.revision, snapshot: data.snapshot, ...result.value };
         } finally {

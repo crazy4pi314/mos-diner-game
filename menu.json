@@ -1,12 +1,12 @@
 {
   "sauces": [
-    {"id": "secure-secrets-sauce", "enabled": true, "alt": "Mo's sweet and sour secure secrets sauce", "emoji": "🥣", "to": "Pack a sweet-and-sour secure secrets sauce cup", "patterns": ["secure secrets sauce", "sweet[- ]and[- ]sour", "sweet and sour"], "say": "add Mo's sweet and sour secure secrets sauce"},
-    {"id": "security-reviews-dip", "enabled": true, "alt": "Copilot's sour cream and security reviews dip", "emoji": "🥣", "to": "Pack a sour cream and security reviews dip cup", "patterns": ["security reviews dip", "sour cream"], "say": "add Copilot's sour cream and security reviews dip"},
-    {"id": "compliance-gravy", "enabled": true, "alt": "Clippy's compliance campaign gravy", "emoji": "🥣", "to": "Pack a compliance campaign gravy boat", "patterns": ["compliance campaign gravy", "compliance gravy", "\\bgravy\\b"], "say": "add Clippy's compliance campaign gravy"}
+    {"id": "secure-secrets-sauce", "enabled": false, "alt": "Mo's sweet and sour secure secrets sauce", "emoji": "🥣", "to": "Pack a sweet-and-sour secure secrets sauce cup", "patterns": ["secure secrets sauce", "sweet[- ]and[- ]sour", "sweet and sour"], "say": "add Mo's sweet and sour secure secrets sauce"},
+    {"id": "security-reviews-dip", "enabled": false, "alt": "Copilot's sour cream and security reviews dip", "emoji": "🥣", "to": "Pack a sour cream and security reviews dip cup", "patterns": ["security reviews dip", "sour cream"], "say": "add Copilot's sour cream and security reviews dip"},
+    {"id": "compliance-gravy", "enabled": false, "alt": "Clippy's compliance campaign gravy", "emoji": "🥣", "to": "Pack a compliance campaign gravy boat", "patterns": ["compliance campaign gravy", "compliance gravy", "\\bgravy\\b"], "say": "add Clippy's compliance campaign gravy"}
   ],
   "dishes": [
     {
-      "id": "project-planning-party-platter", "enabled": true, "category": "Appetizers", "sauces": true,
+      "id": "project-planning-party-platter", "enabled": false, "category": "Appetizers", "sauces": true,
       "name": "Project Planning Party Platter", "emoji": "🍱", "art": null,
       "checks": {"ingredient": "party-snacks", "prep": ["./heat-appetizer-oven.sh", "Waiting for appetizer oven to reach 375°F…"], "test": {"t": "heats every shareable through", "exp": "expected center temp >= 165°F, received 120°F", "at": "bake (kitchen/appetizers.js:42)", "file": "appetizers.js", "what": "bake time", "bad": "cold party snacks"}},
       "patterns": ["project planning party platter", "planning platter", "party platter"],
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "id": "issue-triage-taquitos", "enabled": true, "category": "Appetizers", "sauces": true,
+      "id": "issue-triage-taquitos", "enabled": false, "category": "Appetizers", "sauces": true,
       "name": "Issue Triage Taquitos with spicy summary salsa", "emoji": "🌮", "art": null,
       "checks": {"ingredient": "corn-tortillas", "prep": ["./heat-taquito-oven.sh", "Waiting for taquito oven to reach 400°F…"], "test": {"t": "crisps the taquitos through", "exp": "expected filling temp >= 165°F, received 130°F", "at": "bake (kitchen/taquitos.js:42)", "file": "taquitos.js", "what": "bake time", "bad": "cold taquitos"}},
       "patterns": ["issue triage taquitos", "\\btaquitos?\\b"],
@@ -32,7 +32,7 @@
       ]
     },
     {
-      "id": "canvas-collaboration-cheese-fries", "enabled": true, "category": "Appetizers", "sauces": true,
+      "id": "canvas-collaboration-cheese-fries", "enabled": false, "category": "Appetizers", "sauces": true,
       "name": "Canvas collaboration cheese fries", "emoji": "🍟", "art": null,
       "checks": {"ingredient": "french-fries", "prep": ["./heat-fry-station.sh", "Waiting for fry station to reach 350°F…"], "test": {"t": "fries the potatoes until crisp", "exp": "expected crispness >= 8, received 3", "at": "fry (kitchen/fries.js:42)", "file": "fries.js", "what": "fry time", "bad": "soggy fries"}},
       "patterns": ["canvas collaboration cheese fries", "cheese fries"],
@@ -84,7 +84,7 @@
       ]
     },
     {
-      "id": "feature-franks-n-beans", "enabled": true, "category": "Mains", "sauces": true,
+      "id": "feature-franks-n-beans", "enabled": false, "category": "Mains", "sauces": true,
       "name": "Feature-by-the-forkful franks-n-beans", "emoji": "🫘", "art": null,
       "checks": {"ingredient": "baked-beans", "prep": ["./heat-bean-pot.sh", "Waiting for bean pot to simmer…"], "test": {"t": "heats the franks and beans through", "exp": "expected temp >= 165°F, received 125°F", "at": "simmer (kitchen/beans.js:42)", "file": "beans.js", "what": "simmer time", "bad": "cold beans"}},
       "patterns": ["feature[- ]by[- ]the[- ]forkful", "franks[- ]n[- ]beans", "franks and beans"],
@@ -97,7 +97,7 @@
       ]
     },
     {
-      "id": "copilot-sdk-fried-chicken", "enabled": true, "category": "Mains", "sauces": true,
+      "id": "copilot-sdk-fried-chicken", "enabled": false, "category": "Mains", "sauces": true,
       "name": "Copilot SDK fried Chicken", "emoji": "🍗", "art": null,
       "checks": {"ingredient": "chicken-pieces", "prep": ["./heat-chicken-fryer.sh", "Waiting for chicken fryer to reach 350°F…"], "test": {"t": "cooks the chicken safely", "exp": "expected internal temp >= 165°F, received 140°F", "at": "fry (kitchen/chicken.js:42)", "file": "chicken.js", "what": "fry time", "bad": "undercooked chicken"}},
       "patterns": ["copilot sdk fried chicken", "sdk chicken", "fried chicken"],
@@ -110,7 +110,7 @@
       ]
     },
     {
-      "id": "sandbox-deli-sandwich", "enabled": true, "category": "Mains", "sauces": true,
+      "id": "sandbox-deli-sandwich", "enabled": false, "category": "Mains", "sauces": true,
       "name": "Sandbox deli sandwich", "emoji": "🥪", "art": null,
       "checks": {"ingredient": "deli-bread", "prep": ["./chill-deli-station.sh", "Waiting for deli station to reach 40°F…"], "test": {"t": "keeps the deli filling chilled", "exp": "expected filling temp <= 40°F, received 60°F", "at": "assemble (kitchen/deli.js:42)", "file": "deli.js", "what": "chill time", "bad": "warm deli filling"}},
       "patterns": ["sandbox deli sandwich", "sandbox sandwich", "deli sandwich"],
@@ -123,7 +123,7 @@
       ]
     },
     {
-      "id": "split-py-soup", "enabled": true, "category": "Soup", "sauces": true,
+      "id": "split-py-soup", "enabled": false, "category": "Soup", "sauces": true,
       "name": "Split Py soup", "emoji": "🍵", "art": null,
       "checks": {"ingredient": "split-peas", "prep": ["./heat-pea-soup-pot.sh", "Waiting for pea soup to simmer…"], "test": {"t": "softens the split peas", "exp": "expected peas: tender, received: hard", "at": "simmer (kitchen/pea-soup.js:42)", "file": "pea-soup.js", "what": "simmer time", "bad": "hard split peas"}},
       "patterns": ["split py soup", "split pea soup"],
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "id": "end-to-end-tomato-soup", "enabled": true, "category": "Soup", "sauces": true,
+      "id": "end-to-end-tomato-soup", "enabled": false, "category": "Soup", "sauces": true,
       "name": "End-to-end test tomato soup", "emoji": "🍅", "art": null,
       "checks": {"ingredient": "ripe-tomatoes", "prep": ["./heat-tomato-soup-pot.sh", "Waiting for tomato soup to simmer…"], "test": {"t": "serves tomato soup hot", "exp": "expected temp >= 165°F, received 110°F", "at": "simmer (kitchen/tomato-soup.js:42)", "file": "tomato-soup.js", "what": "simmer time", "bad": "lukewarm tomato soup"}},
       "patterns": ["end[- ]to[- ]end test tomato soup", "tomato soup"],
@@ -149,7 +149,7 @@
       ]
     },
     {
-      "id": "chicken-noodle-unit-test-soup", "enabled": true, "category": "Soup", "sauces": true,
+      "id": "chicken-noodle-unit-test-soup", "enabled": false, "category": "Soup", "sauces": true,
       "name": "Chicken noodle unit test soup", "emoji": "🍜", "art": null,
       "checks": {"ingredient": "soup-noodles", "prep": ["./heat-noodle-soup-pot.sh", "Waiting for noodle soup to simmer…"], "test": {"t": "cooks the noodles through", "exp": "expected noodles: tender, received: crunchy", "at": "simmer (kitchen/noodle-soup.js:42)", "file": "noodle-soup.js", "what": "simmer time", "bad": "crunchy noodles"}},
       "patterns": ["chicken noodle unit test soup", "chicken noodle soup", "unit test soup"],
@@ -162,7 +162,7 @@
       ]
     },
     {
-      "id": "catch-issues-banana-split", "enabled": true, "category": "Dessert", "sauces": false,
+      "id": "catch-issues-banana-split", "enabled": false, "category": "Dessert", "sauces": false,
       "name": "Catch issues and banana split", "emoji": "🍌", "art": null,
       "checks": {"ingredient": "ripe-bananas", "prep": ["./chill-split-dish.sh", "Waiting for banana split dish to reach 34°F…"], "test": {"t": "keeps the ice cream frozen", "exp": "expected temp <= 20°F, received 42°F", "at": "assemble (kitchen/banana-split.js:42)", "file": "banana-split.js", "what": "chill time", "bad": "melted banana splits"}},
       "patterns": ["catch issues and banana split", "banana split"],
@@ -175,7 +175,7 @@
       ]
     },
     {
-      "id": "sky-high-apple-pie", "enabled": true, "category": "Dessert", "sauces": false,
+      "id": "sky-high-apple-pie", "enabled": false, "category": "Dessert", "sauces": false,
       "name": "Sky-high code quality apple pie", "emoji": "🥧", "art": "pie",
       "checks": {"ingredient": "pie-crust", "prep": ["./warm-pie-oven.sh", "Waiting for pie oven to reach 350°F…"], "test": {"t": "bakes the apple filling through", "exp": "expected apples: tender, received: hard", "at": "bake (kitchen/pie.js:42)", "file": "pie.js", "what": "bake time", "bad": "undercooked apple pie"}},
       "patterns": ["sky[- ]high code quality apple pie", "apple pie"],
@@ -188,7 +188,7 @@
       ]
     },
     {
-      "id": "cookies-code-scanning-shake", "enabled": true, "category": "Dessert", "sauces": false,
+      "id": "cookies-code-scanning-shake", "enabled": false, "category": "Dessert", "sauces": false,
       "name": "Cookies and code scanning shake", "emoji": "🥤", "art": "shake",
       "checks": {"ingredient": "sandwich-cookies", "prep": ["./chill-shake-blender.sh", "Waiting for shake blender to reach 34°F…"], "test": {"t": "blends to a sippable thickness", "exp": "expected thickness <= 8, received 14", "at": "blend (kitchen/shake.js:42)", "file": "shake.js", "what": "milk ratio", "bad": "shakes nobody can drink"}},
       "patterns": ["cookies and code scanning shake", "code scanning shake", "cookies? (and cream )?(milk)?shake"],

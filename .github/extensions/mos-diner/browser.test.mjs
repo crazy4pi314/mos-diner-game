@@ -77,7 +77,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
                 signal.addEventListener("abort", () => { modelAborted = true; reject(signal.reason); }, { once: true });
             });
             if (modelBehavior === "late") await new Promise(resolve => { finishModel = resolve; });
-            return { dish: "cookies-code-scanning-shake", opts: [], note: "Other details use house defaults." };
+            return { dish: "stacked-pr-pancakes", opts: [], note: "Other details use house defaults." };
         },
     });
     host.onError = () => {};
@@ -115,6 +115,13 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         // Headless tabs are not necessarily foreground. Control visibility explicitly.
         await connection.evaluate('Object.defineProperty(document, "hidden", { configurable: true, value: false })');
         return connection;
+    }
+    async function resume(connection) {
+        await until(() => connection.evaluate('!document.querySelector("#start-shift").disabled'),
+            "The visible Start/Resume button did not become ready.");
+        await connection.evaluate('document.querySelector("#start-shift").click()');
+        await until(() => connection.evaluate('__mo.S.timer !== null && !document.querySelector("#info-dialog").open'),
+            "The ready Start/Resume button did not start the shift.");
     }
     for (const skin of ["default", "cozy"]) {
         for (const view of ["hub", "classic"]) {
@@ -181,7 +188,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         assert.equal(await retrying.evaluate('document.querySelector("#lifecycle-status").hidden'), true);
         assert.equal(await retrying.evaluate("__mo.S.phase"), "welcome");
         assert.equal(await retrying.evaluate("__mo.S.timer"), null);
-        await retrying.evaluate("__mo.resume()");
+        await resume(retrying);
         assert.equal(await retrying.evaluate("__mo.S.phase"), "shift");
         await retrying.evaluate("__mo.pause()");
         await host.close(id);
@@ -216,16 +223,17 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
           Object.defineProperty(performance, "now", { value: () => clock() + window.__gap });
         `,
     });
-    await interrupted.evaluate("__mo.resume()");
+    await resume(interrupted);
     const beforeGap = await interrupted.evaluate("__mo.snapshot()");
     await interrupted.evaluate("__gap = 9000; __mo.tick()");
     assert.deepEqual(await interrupted.evaluate("__mo.snapshot()"), beforeGap);
     assert.equal(await interrupted.evaluate("__mo.S.timer"), null);
     assert.match(await interrupted.evaluate('document.querySelector("#lifecycle-message").textContent'), /interruption/);
-    assert.equal(await interrupted.evaluate('document.querySelector("#start-shift").disabled'), false);
+    await until(() => interrupted.evaluate('!document.querySelector("#start-shift").disabled'),
+        "Resume must become available when the interruption dialog is visible.");
     await interrupted.evaluate('document.querySelector("#prompt").value = "cookies"; document.querySelector("#send-msg").onclick()');
     assert.deepEqual(await interrupted.evaluate("__mo.snapshot()"), beforeGap);
-    await interrupted.evaluate("__mo.resume()");
+    await resume(interrupted);
     assert.equal(await interrupted.evaluate("__mo.S.elapsed"), beforeGap.state.elapsed);
     assert.notEqual(await interrupted.evaluate("__mo.S.timer"), null);
     await interrupted.evaluate("__mo.pause()");
@@ -260,7 +268,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         certSrc: "assets/mos-cert-logo.svg", certRendered: true, certPink: "rgb(238, 188, 215)",
         icon: "assets/invertocat-pink.svg", markSized: true, markMask: true, lowercaseBrand: false,
     });
-    await first.evaluate("window.__mo.resume()");
+    await resume(first);
     for (const width of [1440, 1000, 901]) {
         await first.send("Emulation.setDeviceMetricsOverride", { width, height: 800, deviceScaleFactor: 1, mobile: false });
         await until(() => first.evaluate(`innerWidth === ${width} && !document.documentElement.classList.contains("tabbed")`),
@@ -346,7 +354,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await first.evaluate("__mo.restart();");
     assert.equal(await first.evaluate(`document.querySelector(".cp-head").getBoundingClientRect().bottom ===
       document.querySelector(".k-head").getBoundingClientRect().bottom`), true, "Empty-state headers must align.");
-    await first.evaluate("__mo.resume()");
+    await resume(first);
     await first.evaluate(`(() => {
       const a = window.__mo, o = a.active();
       a.sendPrompt(o, Copilot.promptText(o.want.dish, o.want.opts)); a.approve(o); a.renderAll();
@@ -362,7 +370,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await first.evaluate('Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange"))');
     await wait(700);
     assert.deepEqual(await first.evaluate("__mo.snapshot()"), paused);
-    await first.evaluate("__mo.resume()");
+    await resume(first);
     await first.evaluate(`(() => {
       const a = __mo, cooking = a.S.orders[0];
       cooking.status = "checks"; cooking.checks = Checks.RUNS.map(r => ({ ...r, state: "queued" })); cooking.ci = 0;
@@ -391,7 +399,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.equal(await second.evaluate("__mo.S.elapsed"), 0);
     assert.equal(await second.evaluate("__mo.S.orders.length"), 0);
     assert.equal(await second.evaluate("__mo.S.timer"), null);
-    await second.evaluate("__mo.resume()");
+    await resume(second);
     await wait(1100);
     const infoTime = await second.evaluate("__mo.S.elapsed");
     await second.evaluate('document.querySelector("#info-btn").click()');
@@ -433,20 +441,22 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.match(await second.evaluate('document.querySelector("#over-orders li").textContent'), /@.+\s+.+ · .+/);
     assert.equal(await second.evaluate('document.querySelector(\'#over-dialog [data-act="restart"]\').textContent'), "Restart");
     assert.equal(await second.evaluate('document.querySelector("#over-close").hidden'), true);
+    await until(() => second.evaluate('!document.querySelector("#start-shift").disabled'),
+        "Results dialog must become visible before restarting.");
     await second.evaluate('document.querySelector(\'#over-dialog [data-act="restart"]\').click()');
-    assert.equal(await second.evaluate("__mo.S.phase"), "welcome");
+    await until(() => second.evaluate('__mo.S.phase === "welcome"'), "Restart from results did not return to welcome.");
     assert.equal(await second.evaluate("__mo.S.elapsed"), 0);
     assert.equal(await second.evaluate("__mo.S.banked"), 0);
     assert.equal(await second.evaluate("__mo.S.orders.length"), 0);
     assert.equal(await second.evaluate('document.querySelector("#info-dialog").open'), true);
-    await second.evaluate("__mo.resume()");
+    await resume(second);
     await second.evaluate("__mo.fleetAll()");
     assert.equal(await second.evaluate("__mo.S.phase"), "won");
     assert.equal(await second.evaluate("__mo.S.served"), 3);
     assert.equal(await second.evaluate('document.querySelector("#hud-served").textContent'), "3/3");
     await second.evaluate(`(() => {
-      const a = __mo, o = a.S.orders.find(order => order.status !== "served");
-      o.status = "ready"; a.serve(o);
+      const a = __mo, o = { ...a.S.orders[0], status: "ready" };
+      a.serve(o);
     })()`);
     assert.equal(await second.evaluate("__mo.S.served"), 3);
     assert.match(await second.evaluate('document.querySelector("#cert-body").textContent'), /fulfilled 3 orders in/);
@@ -474,7 +484,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.equal(await second.evaluate('document.querySelector("#over-dialog").open'), false);
     assert.equal(await second.evaluate('document.querySelector("#cert").classList.contains("show")'), true);
     await second.evaluate("__mo.restart()");
-    await second.evaluate("__mo.resume()");
+    await resume(second);
     await second.evaluate(`(() => {
       const a = __mo;
       a.S.elapsed = 5; a.tick();
@@ -504,9 +514,16 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     const frame = { evaluate: expression => wrapper.evaluate(expression, frameContext.id) };
     await until(() => frame.evaluate('!!window.__mo && !document.querySelector("#start-shift").disabled'), "Frame did not load.")
         .catch(async error => { throw new Error(`${error.message} ${JSON.stringify(await frame.evaluate('({ text: document.body.innerText, secure: isSecureContext, crypto: typeof crypto.randomUUID })'))} ${JSON.stringify(wrapper.errors)}`); });
-    await frame.evaluate("__mo.resume()");
+    await frame.evaluate('document.querySelector("#start-shift").click()');
     await wait(1100);
-    assert.ok(await frame.evaluate("__mo.S.elapsed >= 1"));
+    await until(() => frame.evaluate("__mo.S.elapsed >= 1"), "Embedded start button did not advance the clock.", 30)
+        .catch(async error => { throw new Error(`${error.message} ${JSON.stringify(await frame.evaluate('({ phase: __mo.S.phase, timer: __mo.S.timer, hidden: document.hidden, disabled: document.querySelector("#start-shift").disabled, message: document.querySelector("#lifecycle-message").textContent, dialog: document.querySelector("#info-dialog").open })'))}`); });
+    await frame.evaluate('document.querySelector("#info-btn").click()');
+    await wait(300);
+    assert.equal(await frame.evaluate("__mo.S.timer"), null);
+    await frame.evaluate('document.querySelector("#start-shift").click()');
+    await until(() => frame.evaluate('__mo.S.timer !== null && !document.querySelector("#info-dialog").open'),
+        "Visible embedded canvas did not resume from the welcome dialog button.");
     await wrapper.evaluate('document.querySelector("iframe").style.display = "none"');
     await until(() => frame.evaluate("__mo.S.timer === null"), "CSS-hidden canvas did not pause.");
     const frameTime = await frame.evaluate("__mo.S.elapsed");
@@ -515,11 +532,14 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await wrapper.evaluate('document.querySelector("iframe").style.display = "block"');
     await wait(1100);
     assert.equal(await frame.evaluate("__mo.S.elapsed"), frameTime);
+    await frame.evaluate('document.querySelector("#start-shift").click()');
+    await until(() => frame.evaluate('__mo.S.timer !== null && !document.querySelector("#info-dialog").open'),
+        "Visible embedded canvas did not resume after being hidden.");
     await host.close("frame");
 
     const classicURL = await host.open("classic", { gameId: "classic-browser", view: "classic" });
     const classic = await page(classicURL);
-    await classic.evaluate("__mo.resume()");
+    await resume(classic);
     await classic.evaluate(`(() => {
       const a = __mo, o = a.active();
       a.sendPrompt(o, Copilot.promptText(o.want.dish, o.want.opts));
@@ -529,7 +549,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     const classicPaused = await classic.evaluate("__mo.snapshot()");
     await wait(1500);
     assert.deepEqual(await classic.evaluate("__mo.snapshot()"), classicPaused);
-    await classic.evaluate("__mo.resume()");
+    await resume(classic);
     await wait(1500);
     assert.equal(await classic.evaluate("__mo.S.banked"), 0);
     assert.equal(await classic.evaluate('document.querySelector("#hud-tips").closest(".chip").hidden'), true);
@@ -569,10 +589,10 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
                   document.querySelector('[data-act="approve"]').click();
                   return { categories, selected, expected, steps: o.pending.length };
                 })()`);
-                assert.deepEqual(details.categories.slice(0, 5), ["Appetizers", "All Day Breakfast", "Mains", "Soup", "Dessert"]);
-                assert.equal(details.categories.includes("Secret Sauces"), dish.sauces);
+                assert.deepEqual(details.categories, ["All Day Breakfast", "Details"]);
+                assert.equal(details.expected.length, 3);
                 assert.deepEqual(details.selected, details.expected, `${skin}/${view}/${dish.id}: chips must round-trip`);
-                assert.equal(details.steps, dish.sauces ? 7 : 4);
+                assert.equal(details.steps, 4);
                 await until(() => menuPage.evaluate('__mo.active().status === "ready"'), `${dish.id} did not finish cooking.`);
                 assert.equal(await menuPage.evaluate('__mo.active().prs.length'), details.steps);
                 if (!dish.art) {
@@ -585,24 +605,59 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
                     assert.equal(await menuPage.evaluate('document.querySelector(".seat.eating .dish-food").textContent'), dish.emoji);
                 }
             }
+            await menuPage.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
+            assert.deepEqual(await menuPage.evaluate(`(async () => {
+              __mo.restart(); await __mo.resume();
+              const button = () => document.querySelector('[data-act="help"]');
+              const animation = () => getComputedStyle(button().querySelector(".help-sparkle")).animationName;
+              __mo.S.left = 16; __mo.renderAll();
+              const before = animation(), width = button().getBoundingClientRect().width;
+              __mo.tick();
+              const boundary = { left: __mo.S.left, animation: animation() };
+              __mo.renderAll();
+              const rerender = animation(), stableWidth = button().getBoundingClientRect().width === width;
+              __mo.pause();
+              const paused = animation();
+              await __mo.resume();
+              const resumed = animation();
+              __mo.S.left = 20; __mo.renderAll();
+              const extended = animation();
+              __mo.S.left = 1; __mo.renderAll();
+              const finalSecond = animation();
+              __mo.tick();
+              const ended = animation();
+              __mo.restart();
+              return { before, boundary, rerender, stableWidth, paused, resumed, extended, finalSecond, ended,
+                reset: document.querySelector(".shell").classList.contains("help-urgent") };
+            })()`), { before: "none", boundary: { left: 15, animation: "help-twinkle" },
+                rerender: "help-twinkle", stableWidth: true, paused: "none", resumed: "help-twinkle",
+                extended: "none", finalSecond: "help-twinkle", ended: "none", reset: false });
+            await menuPage.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+            assert.deepEqual(await menuPage.evaluate(`(async () => {
+              await __mo.resume(); __mo.S.left = 15; __mo.renderAll();
+              const button = document.querySelector('[data-act="help"]');
+              return [getComputedStyle(button.querySelector(".help-sparkle")).animationName,
+                getComputedStyle(button, "::before").animationName, getComputedStyle(button, "::after").animationName];
+            })()`), ["none", "none", "none"]);
+            await menuPage.send("Emulation.setEmulatedMedia", { features: [] });
             for (const remove of [false, true]) {
                 await menuPage.evaluate(`(async () => {
                   __mo.restart(); await __mo.resume();
-                  const o = __mo.active(), d = Copilot.MENU[0], sauce = d.opts.find(option => option.addon);
-                  o.want = { dish: d.id, opts: ${remove} ? [] : [sauce.id] }; o.failKind = null;
-                  __mo.sendPrompt(o, Copilot.promptText(d.id, ${remove} ? [sauce.id] : []));
+                  const o = __mo.active(), d = Copilot.MENU[0], option = d.opts[0];
+                  o.want = { dish: d.id, opts: ${remove} ? [] : [option.id] }; o.failKind = null;
+                  __mo.sendPrompt(o, Copilot.promptText(d.id, ${remove} ? [option.id] : []));
                   __mo.approve(o); __mo.renderAll();
                 })()`);
-                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), "Wrong sauce order did not cook.");
-                assert.equal(await menuPage.evaluate("__mo.active().prs.length"), remove ? 5 : 4);
+                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), "Wrong breakfast order did not cook.");
+                assert.equal(await menuPage.evaluate("__mo.active().prs.length"), 4);
                 assert.deepEqual(await menuPage.evaluate(`(() => {
-                  const o = __mo.active(), sauce = Copilot.dishOf(o.dish).opts.find(option => option.addon);
+                  const o = __mo.active(), option = Copilot.dishOf(o.dish).opts[0];
                   __mo.serve(o);
                   const status = o.status, flagged = o.flag;
-                  __mo.toggle(o, sauce.id); __mo.approve(o); __mo.renderAll();
-                  return { status, flagged, expected: [sauce.id], pending: o.pending.length };
-                })()`), { status: "returned", flagged: ["secure-secrets-sauce"], expected: ["secure-secrets-sauce"], pending: 1 });
-                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), "Sauce correction did not finish.");
+                  __mo.toggle(o, option.id); __mo.approve(o); __mo.renderAll();
+                  return { status, flagged, expected: [option.id], pending: o.pending.length };
+                })()`), { status: "returned", flagged: ["berry-good-review"], expected: ["berry-good-review"], pending: 1 });
+                await until(() => menuPage.evaluate('__mo.active().status === "ready"'), "Breakfast correction did not finish.");
                 await menuPage.evaluate("__mo.serve(__mo.active()); __mo.renderAll()");
                 assert.equal(await menuPage.evaluate("__mo.S.served"), 1);
             }
@@ -629,7 +684,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
 
     const deterministicURL = await host.open("deterministic-only", { gameId: "deterministic-only", inputMode: "deterministic" });
     const deterministic = await page(deterministicURL);
-    await deterministic.evaluate("__mo.resume()");
+    await resume(deterministic);
     assert.equal(await deterministic.evaluate('document.querySelector(\'[data-act="inputmode"]\')'), null);
     await deterministic.evaluate('__mo.sendPrompt(__mo.active(), Copilot.promptText(__mo.active().want.dish, __mo.active().want.opts))');
     assert.equal(await deterministic.evaluate("__mo.active().dish === __mo.active().want.dish"), true);
@@ -643,7 +698,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     runtimeAvailable = false;
     const missingURL = await host.open("missing-runtime", { gameId: "missing-runtime", inputMode: "copilot" });
     const missingRuntime = await page(missingURL);
-    await missingRuntime.evaluate("__mo.resume()");
+    await resume(missingRuntime);
     assert.equal(await missingRuntime.evaluate('document.querySelector(\'[data-arg="copilot"]\').disabled'), true);
     assert.match(await missingRuntime.evaluate('document.querySelector("#cp-body").innerText'), /No executable Copilot CLI/);
     await missingRuntime.evaluate('__mo.sendPrompt(__mo.active(), Copilot.promptText(__mo.active().want.dish, __mo.active().want.opts))');
@@ -654,14 +709,14 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     runtimeAvailable = true;
     const liveURL = await host.open("live", { gameId: "live-browser", inputMode: "copilot" });
     const live = await page(liveURL);
-    await live.evaluate("__mo.resume()");
+    await resume(live);
     assert.match(await live.evaluate('document.querySelector("#cp-body").innerText'), /sign-in, network and model access unverified/);
     await live.evaluate(`(() => {
-      const o = __mo.active(); o.want = { dish: "cookies-code-scanning-shake", opts: ["no-callback-cream"] }; o.speech = "Cookies and code scanning shake, no callback cream.";
+      const o = __mo.active(); o.want = { dish: "stacked-pr-pancakes", opts: ["async-syrup"] }; o.speech = "Stacked PR Pancakes, async syrup.";
     })()`);
     modelBehavior = "wait";
     let previousCalls = modelCalls;
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Stacked PR Pancakes")');
     await until(() => modelCalls > previousCalls, "Live request did not reach the provider.");
     assert.equal(await live.evaluate('document.querySelector("#send-msg").disabled'), true);
     assert.match(await live.evaluate('document.querySelector("#cp-body").innerText'), /Copilot is proposing/);
@@ -678,13 +733,13 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await until(() => live.evaluate('document.querySelector("#cp-body").innerText.includes("could not propose")'), "Model failure was not shown.");
     assert.equal(await live.evaluate("__mo.active().dish"), null);
     modelBehavior = "invalid";
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Stacked PR Pancakes")');
     await until(() => live.evaluate('!document.querySelector("#send-msg").disabled'), "Invalid reply did not unblock retry.");
     assert.equal(await live.evaluate("__mo.active().dish"), null);
 
     modelBehavior = "wait"; modelAborted = false;
     previousCalls = modelCalls;
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Stacked PR Pancakes")');
     await until(() => modelCalls > previousCalls, "Second request did not reach the provider.");
     await live.evaluate("__mo.pause()");
     await until(() => modelAborted, "Pausing did not abort the model.");
@@ -692,38 +747,38 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await wait(200);
     assert.deepEqual(await live.evaluate("__mo.snapshot()"), livePaused);
     assert.equal(livePaused.state.orders[0].dish, null);
-    assert.equal(livePaused.state.orders[0].text, "Cookies and code scanning shake");
+    assert.equal(livePaused.state.orders[0].text, "Stacked PR Pancakes");
     assert.equal(JSON.stringify(livePaused).includes("requestId"), false);
-    await live.evaluate("__mo.resume()");
+    await resume(live);
     assert.match(await live.evaluate('document.querySelector("#cp-body").innerText'), /interrupted by pause/);
 
     modelBehavior = "wait"; modelAborted = false;
     previousCalls = modelCalls;
-    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
+    await live.evaluate('void __mo.sendPrompt(__mo.active(), "Stacked PR Pancakes")');
     await until(() => modelCalls > previousCalls, "Editable request did not reach the provider.");
     await live.evaluate(`(() => {
-      const prompt = document.querySelector("#prompt"); prompt.value = "A code scanning shake";
+      const prompt = document.querySelector("#prompt"); prompt.value = "A sandbox deli sandwich";
       prompt.dispatchEvent(new Event("input", { bubbles: true }));
     })()`);
     await until(() => modelAborted, "Editing did not abort the previous prompt revision.");
-    assert.equal(await live.evaluate("__mo.active().text"), "A code scanning shake");
+    assert.equal(await live.evaluate("__mo.active().text"), "A sandbox deli sandwich");
     assert.equal(await live.evaluate("__mo.active().dish"), null);
     assert.equal(await live.evaluate('document.querySelector("#send-msg").disabled'), false);
 
     modelBehavior = "ok";
-    await live.evaluate('__mo.sendPrompt(__mo.active(), "Cookies and code scanning shake")');
-    assert.equal(await live.evaluate("__mo.active().dish"), "cookies-code-scanning-shake");
+    await live.evaluate('__mo.sendPrompt(__mo.active(), "Stacked PR Pancakes")');
+    assert.equal(await live.evaluate("__mo.active().dish"), "stacked-pr-pancakes");
     assert.equal(await live.evaluate("__mo.active().status"), "ordering");
     assert.equal(await live.evaluate("__mo.active().prs.length"), 0);
     assert.deepEqual(await live.evaluate("__mo.active().set"), []);
     await live.evaluate("__mo.help(__mo.active()); __mo.renderAll()");
-    assert.deepEqual(await live.evaluate("__mo.active().flag"), ["no-callback-cream"]);
+    assert.deepEqual(await live.evaluate("__mo.active().flag"), ["async-syrup"]);
     await live.evaluate(`(() => {
-      __mo.toggle(__mo.active(), "no-callback-cream"); __mo.renderAll();
+      __mo.toggle(__mo.active(), "async-syrup"); __mo.renderAll();
       document.querySelector('[data-act="approve"]').click();
     })()`);
     assert.equal(await live.evaluate("__mo.active().status"), "cooking");
-    assert.deepEqual(await live.evaluate("__mo.active().set"), ["no-callback-cream"]);
+    assert.deepEqual(await live.evaluate("__mo.active().set"), ["async-syrup"]);
     await live.evaluate("__mo.pause()");
     await until(async () => {
         const saved = JSON.parse(await readFile(join(stateDirectory, "live-browser.json"), "utf8"));
@@ -731,8 +786,8 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     }, "Approved live plan was not checkpointed.");
     assert.equal(await live.evaluate("__mo.S.orders[0].status"), "cooking");
     assert.equal(await live.evaluate("__mo.S.timer"), null);
-    assert.deepEqual(await live.evaluate("__mo.S.orders[0].set"), ["no-callback-cream"]);
-    await live.evaluate("__mo.resume();");
+    assert.deepEqual(await live.evaluate("__mo.S.orders[0].set"), ["async-syrup"]);
+    await resume(live);
     modelBehavior = "fail";
     await live.evaluate(`(() => {
       for (let i = 0; i < 6; i++) __mo.tick();
@@ -745,7 +800,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await live.evaluate(`(() => {
       const o = __mo.S.orders.find(o => o.status === "line"); __mo.select(o.id);
       document.querySelector('[data-act="inputmode"][data-arg="copilot"]').click();
-      void __mo.sendPrompt(o, "Cookies and code scanning shake");
+      void __mo.sendPrompt(o, "Stacked PR Pancakes");
     })()`);
     await until(() => modelCalls > previousCalls, "Late request did not reach the provider.");
     await live.evaluate("__mo.restart()");
@@ -760,18 +815,18 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     // Optional signed-in check against the actual extension provider, not a mock.
     if (process.env.DINER_LIVE_URL) {
         const native = await page(process.env.DINER_LIVE_URL);
-        await native.evaluate("__mo.resume()");
+        await resume(native);
         assert.equal(await native.evaluate("__mo.active().dish"), null, "DINER_LIVE_URL must use a fresh gameId.");
         assert.equal(await native.evaluate(`document.querySelector(
             '[data-act="inputmode"][data-arg="copilot"]'
         )?.getAttribute("aria-pressed")`), "true",
         "DINER_LIVE_URL must select available Real Copilot input; deterministic fallback is not a live smoke test.");
-        await native.evaluate('void __mo.sendPrompt(__mo.active(), "Cookies and code scanning shake, dark-mode scan and no callback cream")');
+        await native.evaluate('void __mo.sendPrompt(__mo.active(), "Stacked PR Pancakes, berry good review and async syrup")');
         await until(() => native.evaluate('!!__mo.active().dish || !!document.querySelector(\'#cp-body [role="alert"]\')'),
             "Actual extension did not finish the model request.", 450);
         assert.equal(await native.evaluate('document.querySelector(\'#cp-body [role="alert"]\')?.textContent ?? ""'), "");
-        assert.equal(await native.evaluate("__mo.active().dish"), "cookies-code-scanning-shake");
-        assert.deepEqual(await native.evaluate("__mo.active().set.slice().sort()"), ["dark-mode-scan", "no-callback-cream"]);
+        assert.equal(await native.evaluate("__mo.active().dish"), "stacked-pr-pancakes");
+        assert.deepEqual(await native.evaluate("__mo.active().set.slice().sort()"), ["async-syrup", "berry-good-review"]);
         assert.equal(await native.evaluate("__mo.active().status"), "ordering");
         assert.equal(await native.evaluate("__mo.active().prs.length"), 0);
         await native.evaluate("__mo.pause()");

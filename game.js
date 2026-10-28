@@ -33,11 +33,15 @@
   let canvasVisible = !canvas;
   const hidden = () => document.hidden || (canvas && !canvasVisible);
   let controller = null, loaded = !canvas, lifecycleFailed = false, resumed = false;
+  let resuming = false;
   let initializing = null, initializationAbort = null, initializationGeneration = 0, pageClosed = false;
   let liveAvailable = false, dinerConfig = null;
   const modelRequests = new Map(), modelNotices = new Map();
   const canEdit = () => loaded && !lifecycleFailed && (!canvas || controller?.canEdit());
   const canAdvance = () => resumed && !hidden() && (!canvas || controller?.canAdvance());
+  function syncStartButton() {
+    startBtn.disabled = !loaded || lifecycleFailed || hidden() || resuming;
+  }
   function lifecycleError(message) {
     lifecycleFailed = true;
     stopTimer();
@@ -556,6 +560,7 @@
     $("#hud-chef").textContent = S.chef || "octocat";
     timerChip.classList.toggle("low", S.left <= 30);
     const running = S.phase === "shift" && !!S.timer && S.left > 0;
+    shell.classList.toggle("help-urgent", running && S.left <= 15);
     timerChip.classList.toggle("urgent", running && S.left <= 30);
     timerChip.classList.toggle("critical", running && S.left < 10);
     timerChip.classList.toggle("paused", S.phase === "shift" && !S.timer);
@@ -769,7 +774,7 @@
     headEl.innerHTML = `<button class="cp-back" data-act="floor" aria-label="Back to the counter">←</button>
       <span class="avatar cp">${cpIcon(16)}</span>
       <div class="cp-title"><b>Copilot</b><span class="cp-sub">Order #${o.id} · ${o.face} ${esc(o.name)}</span></div>${bar(o)}
-      ${o.status === "served" ? "" : `<button class="btn ask" data-act="help">✨ Help, chef!</button>`}`;
+      ${o.status === "served" ? "" : `<button class="btn ask" data-act="help"><span class="help-sparkle" aria-hidden="true">✨</span> Help, sous-chef!</button>`}`;
     if (stage(o) === "prompt" && document.activeElement !== input) input.value = o.text;
     bodyEl.innerHTML = body(o);
     // Chat-style scrolling: new messages scroll in; switching orders jumps to the latest (or the plan / failing check)
@@ -1104,15 +1109,25 @@
     if (!infoDlg.open) infoDlg.showModal();
   };
   async function resumeShift() {
-    if (!loaded || lifecycleFailed || hidden()) return;
-    startBtn.disabled = true;
-    if (canvas && !await controller.resume().catch(() => false)) { startBtn.disabled = lifecycleFailed; return; }
-    $("#lifecycle-status").hidden = true;
-    resumed = true;
-    startBtn.disabled = false;
-    if (infoDlg.open) infoDlg.close();
-    beginShift();
-    if (canvas) await controller.save().catch(() => {});
+    if (!loaded || lifecycleFailed || resuming) return;
+    if (hidden()) {
+      controlInterrupted("Bring the diner canvas into view, then start or resume your shift.");
+      syncStartButton();
+      return;
+    }
+    resuming = true;
+    syncStartButton();
+    try {
+      if (canvas && !await controller.resume().catch(() => false)) return;
+      $("#lifecycle-status").hidden = true;
+      resumed = true;
+      if (infoDlg.open) infoDlg.close();
+      beginShift();
+      if (canvas) await controller.save().catch(() => {});
+    } finally {
+      resuming = false;
+      syncStartButton();
+    }
   }
   function dismissInfo() {
     if (S.phase === "shift") resumeShift();
@@ -1180,7 +1195,10 @@
     renderHud();
     saveSoon();
   });
-  document.addEventListener("visibilitychange", () => { if (document.hidden) pauseShift(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseShift();
+    syncStartButton();
+  });
   window.addEventListener("pagehide", () => {
     pageClosed = true;
     initializationGeneration++;
@@ -1191,13 +1209,29 @@
   if (canvas) {
     // Page Visibility alone does not detect an iframe hidden with CSS by its parent.
     const tracksVisibility = window.self !== window.top && "isVisible" in IntersectionObserverEntry.prototype;
-    const visibleEntry = DinerLifecycle.createVisibilityTracker(tracksVisibility);
+    let visibleEntry = DinerLifecycle.createVisibilityTracker(tracksVisibility), observedSurface;
     const observer = new IntersectionObserver(([entry]) => {
+      if (entry.target !== observedSurface) return;
       canvasVisible = visibleEntry(entry);
       if (!canvasVisible) pauseShift();
+      syncStartButton();
     }, tracksVisibility ? { trackVisibility: true, delay: 100 } : {});
-    observer.observe(document.documentElement);
-    window.addEventListener("pagehide", () => observer.disconnect(), { once: true });
+    function observeSurface() {
+      // A modal's backdrop obscures the page, not the visible game canvas.
+      const surface = infoDlg.open ? infoDlg : overDlg.open ? overDlg
+        : certEl.classList.contains("show") ? certEl : document.documentElement;
+      if (surface === observedSurface) return;
+      observer.disconnect();
+      observedSurface = surface;
+      visibleEntry = DinerLifecycle.createVisibilityTracker(tracksVisibility);
+      observer.observe(surface);
+    }
+    const dialogs = new MutationObserver(observeSurface);
+    dialogs.observe(infoDlg, { attributes: true, attributeFilter: ["open"] });
+    dialogs.observe(overDlg, { attributes: true, attributeFilter: ["open"] });
+    dialogs.observe(certEl, { attributes: true, attributeFilter: ["class"] });
+    observeSurface();
+    window.addEventListener("pagehide", () => { observer.disconnect(); dialogs.disconnect(); }, { once: true });
   }
   if (canvas) {
     const retry = $("#retry-loading");
@@ -1257,7 +1291,7 @@
           dinerConfig = config;
           liveAvailable = config.copilot === true;
           lifecycleFailed = false;
-          loaded = true; startBtn.disabled = false;
+          loaded = true; syncStartButton();
           retry.hidden = true;
           $("#lifecycle-status").hidden = true;
           renderAll();

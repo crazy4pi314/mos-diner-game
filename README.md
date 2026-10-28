@@ -17,7 +17,7 @@ A GitHub Universe '26 booth game. You work the counter at Mo's, and Copilot is y
 
 The screen has three columns:
 
-- **Left: the line.** When the doors open, all six customers walk in one after another and form a line. The person at the front says their order in a speech bubble. Everyone shuffles forward as you take orders. Customers you've served wait at **Pickup** at the bottom.
+- **Left: the line.** When the doors open, three customers walk in one after another and form a line, one for each breakfast dish. The person at the front says their order in a speech bubble. Everyone shuffles forward as you take orders. Customers you've served wait at **Pickup** at the bottom.
 - **Center: Copilot.** The conversation for the selected order: what the customer said, your prompt, and Copilot's plan.
 - **Right: the kitchen.** Every approved order cooks here as a PR stack, one PR at a time. When a stack is green, **Merge & serve** it.
 
@@ -30,13 +30,13 @@ The Copilot CLI resolves its SDK automatically; no install or build is needed.
 The standalone site still opens directly from `index.html` or any static web host.
 
 Menu dishes, customer order phrases, recipe steps, and options live in
-`menu.json`. The menu contains 15 dishes grouped into Appetizers, All Day
-Breakfast, Mains, Soup, and Dessert, with three recipe options per dish.
-The three shared **Secret Sauces** are defined once in `sauces` and offered
-on dishes with `sauces: true` (all non-dessert categories). They are optional
-side cups, not standalone orders. Selected sauces add preparation PRs;
-omitted sauces remain editable in plan review but do not add cooking work.
-Adding or removing a sauce on a returned order rebuilds only that sauce step.
+`menu.json`. The active menu contains only three All Day Breakfast dishes:
+Stacked PR Pancakes, Eggs your way with Copilot code review, and Bacon,
+eggs, and balanced code reviews, with three recipe options per dish.
+Appetizers, Mains, Soup, and Dessert remain in the data with `enabled: false` and are not offered
+in dish selection, typed prompts, or new customer orders.
+Secret Sauces are disabled in `menu.json`; they do not appear in the menu,
+customer requests, prompt options, plan review, or cooking steps.
 For Eggs your way, sunny-side approval changes the first egg and scramble
 the diff changes the second, so both options can be ordered together.
 Set a dish, recipe option, or shared sauce's `enabled` field to `false` to remove it
@@ -130,12 +130,20 @@ instances sharing a `gameId` still compete for the same exclusive controller.
 ### Pausing and resetting
 
 Canvas shifts load **paused**. Only **Start shift / Resume shift** (or Enter in the
-name field) acquires control and starts the clocks. Opening the info dialog pauses
+name field) acquires control and starts the clocks. Start remains disabled until initialization and canvas visibility are
+ready. Visibility tracking observes the active welcome/results dialog or
+certificate when present, rather than the page obscured by its modal backdrop.
+Hiding the canvas still pauses it; showing it enables explicit resume without
+starting the clock automatically.
+Opening the info dialog pauses
 the one-second shift clock, 450ms cooking/check clock, and deployment/eating/tip
 delays. Closing that dialog resumes the same in-memory shift. Hidden pages and
 hidden/clipped iframes remain paused until the player explicitly resumes them.
 The top-right **Reset game** button clears the shift and returns to the welcome
 screen.
+During the final 15 seconds of a running shift, **Help, sous-chef!** subtly
+twinkles. The effect stops when paused, when time is added above 15 seconds,
+or when the shift ends, and is disabled for reduced-motion preferences.
 
 Canvas loads always start a fresh shift; previous shift progress is not restored.
 Version-1 JSON checkpoints still live in
@@ -152,6 +160,11 @@ Only one controller may own a game ID, even across providers using the same
 state directory. Atomic file replacement, a short exclusive writer lock,
 revision checks and an eight-second lease prevent sibling writes and stale
 controllers. The renderer stops editing and advancing before its lease can expire.
+On Windows, checkpoint replacement retries `EPERM`, `EACCES`, and `EBUSY`
+up to five times with exponential delays totaling 310ms. The writer lock stays
+held and the existing checkpoint is never deleted; only a successful atomic
+rename commits the new state. Persistent permission failures and other disk
+errors still block play and are reported normally.
 After an execution gap or suspended webview, expired control pauses the live
 in-memory shift, cancels pending saves and clocks, and offers **Resume shift**.
 Resume rereads the current revision and atomically reclaims control only if it
@@ -220,7 +233,7 @@ Fulfill three orders exactly as requested within 90 seconds and you win a gift c
 ## How to play
 
 1. **Take the order.** Read what the customer asks for. The details matter.
-2. **Prompt Copilot.** Choose a dish from its category, then tap detail and optional Secret Sauces chips, or type it (`@copilot one sandbox deli sandwich, rebase on rye`).
+2. **Prompt Copilot.** Choose a breakfast dish, then tap detail chips, or type it (`@copilot one stacked pr pancakes, async syrup`).
 3. **Review the plan.** Copilot lists one PR per step. Details from your prompt are tagged *you asked*; anything you left out is tagged *assumed* (the house default). Tap a step to change it, then **Approve plan**.
 4. **Merge & serve.** Copilot cooks the stack in the kitchen while you take the next order. When it's green, merge it and hand it over.
 
