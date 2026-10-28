@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, rm, rename, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -85,6 +85,73 @@ test("duplicate providers cannot claim, write stale revisions, or outlive their 
     await assert.rejects(a.save("game", winner, 1, snapshot()), { status: 409 });
     await b.release("game", loser);
     assert.equal((await a.load("game")).busy, false);
+});
+test("Windows replacement retries preserve the checkpoint and writer lock until atomic commit", async t => {
+    for (const code of ["EPERM", "EACCES", "EBUSY"]) {
+        const path = await directory(t), owner = randomUUID();
+        const initial = createStateStore(path);
+        await initial.claim("game", owner, 0);
+        await initial.save("game", owner, 0, snapshot());
+        const previous = await readFile(join(path, "game.json"), "utf8");
+        const delays = [], attempts = [];
+        const store = createStateStore(path, Date.now, {
+            platform: "win32",
+            renameFile: async (source, target) => {
+                attempts.push([source, target]);
+                assert.equal(await readFile(target, "utf8"), previous);
+                assert.equal(await readFile(join(path, "game.lock"), "utf8"), String(process.pid));
+                if (attempts.length <= 2) throw Object.assign(new Error("File is in use"), { code });
+                await rename(source, target);
+            },
+            wait: async delay => { delays.push(delay); },
+        });
+        const value = snapshot();
+        value.state.elapsed++;
+        const saved = await store.save("game", owner, 1, value);
+        assert.equal(saved.revision, 2);
+        assert.deepEqual((await initial.load("game")).snapshot, value);
+        assert.deepEqual(delays, [10, 20]);
+        assert.equal(attempts.length, 3);
+        assert.ok(attempts.every(([source, target]) => source === attempts[0][0] && target === attempts[0][1]));
+        assert.deepEqual(await readdir(path), ["game.json"]);
+    }
+});
+test("permanent Windows replacement failures are bounded, preserve the old save and clean up", async t => {
+    const path = await directory(t), owner = randomUUID(), initial = createStateStore(path);
+    await initial.claim("game", owner, 0);
+    await initial.save("game", owner, 0, snapshot());
+    const previous = await readFile(join(path, "game.json"), "utf8");
+    const failure = Object.assign(new Error("Access denied"), { code: "EPERM" });
+    const delays = [];
+    let attempts = 0;
+    const store = createStateStore(path, Date.now, {
+        platform: "win32",
+        renameFile: async () => { attempts++; throw failure; },
+        wait: async delay => { delays.push(delay); },
+    });
+    const value = snapshot();
+    value.state.elapsed++;
+    await assert.rejects(store.save("game", owner, 1, value), error => error === failure);
+    assert.equal(attempts, 6);
+    assert.deepEqual(delays, [10, 20, 40, 80, 160]);
+    assert.equal(await readFile(join(path, "game.json"), "utf8"), previous);
+    assert.deepEqual(await readdir(path), ["game.json"]);
+    assert.equal((await initial.save("game", owner, 1, value)).revision, 2);
+});
+test("unrelated replacement failures and non-Windows permission errors are not retried", async t => {
+    for (const [platform, code] of [["win32", "EIO"], ["win32", "ENOSPC"], ["win32", "ENOENT"], ["linux", "EPERM"]]) {
+        const path = await directory(t), failure = Object.assign(new Error("Cannot replace file"), { code });
+        let attempts = 0;
+        const store = createStateStore(path, Date.now, {
+            platform,
+            renameFile: async () => { attempts++; throw failure; },
+            wait: async () => assert.fail("This error must not be retried"),
+        });
+        await assert.rejects(store.claim("game", randomUUID(), 0), error => error === failure);
+        assert.equal(attempts, 1);
+        assert.deepEqual(await readdir(path), []);
+        assert.equal((await createStateStore(path).load("game")).revision, 0);
+    }
 });
 test("controller restores paused; hidden, timeout, persistence failure and cleanup stop advancement", async () => {
     let now = 0, hidden = false, restores = 0, pauses = 0, cancelled = 0, failSave = false;
