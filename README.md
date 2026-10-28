@@ -1,19 +1,51 @@
-# Mo's Diner canvas 🍳
+# Mo's Diner 🍳
 
-This is the self-contained Copilot canvas repository, extracted from
-`github/gh-universe-26-diner-game` at commit `07858b3`. It has its own game
-files, assets, menu builder, extension host, and tests; no files are loaded
-from the original repository. Original mockups and pull-request screenshots
-are not included.
+A diner-themed game about prompting, reviewing plans, and shipping code with
+GitHub Copilot. You work the counter at Mo's, and Copilot is your sous-chef.
+Turn customer orders into prompts, review the cooking plan, and merge a stack
+of pull requests to serve breakfast.
 
-This repository is hosted privately at
-https://github.com/crazy4pi314/mos-diner-game.
-Open this directory as a repository in Copilot so its project extension in
-`.github/extensions/mos-diner/` can be loaded.
-Changes to shared game files in either repository are independent; they are
-not automatically synchronized.
+**The challenge:** fulfill three orders exactly as requested within 90 seconds.
+Each cooking step is a PR, and kitchen mishaps become checks to diagnose and fix.
 
-A GitHub Universe '26 booth game. You work the counter at Mo's, and Copilot is your cook. Customers walk up and tell you what they want. You turn that into a prompt, review Copilot's plan, and merge the result as a stack of pull requests (one PR per cooking step).
+Mo's Diner runs as a standalone browser game or a Copilot canvas. Game files,
+artwork, fonts, menu data, and the canvas host are self-contained in this
+repository. Prompts are interpreted locally; gameplay does not call a model
+or consume Copilot usage.
+
+## Quick start
+
+### Play in a browser
+
+Clone or download [this repository](https://github.com/crazy4pi314/mos-diner-game)
+and open `index.html` in Microsoft Edge or another modern browser. No package
+installation, build, account, or server is required for standalone play.
+
+The default view uses **Orders / Prep / Kitchen** navigation. For the classic
+diner layout, add `?fun` to the URL; add `?skin=cozy` for the cozy theme, or
+combine them as `?fun&skin=cozy`.
+
+### Play in Copilot
+
+Open this directory as a repository in a Copilot host that supports project
+canvas extensions, load `.github/extensions/mos-diner/`, and ask Copilot to
+open the **Mo's Diner** canvas. See [Copilot canvas](#copilot-canvas) for input
+options and host details.
+
+### Customize the menu
+
+Edit `menu.json`, then regenerate the standalone fallback:
+
+```powershell
+node scripts\build-menu-file.mjs
+```
+
+The active menu is breakfast-only: **Stacked PR Pancakes**, **Eggs your way with
+Copilot code review**, and **Bacon, eggs, and balanced code reviews**. Each dish
+has three recipe options. Reload the page after editing; for canvas menu changes,
+also reload the extension so server-side validation uses the updated menu.
+
+## The diner
 
 The screen has three columns:
 
@@ -22,6 +54,9 @@ The screen has three columns:
 - **Right: the kitchen.** Every approved order cooks here as a PR stack, one PR at a time. When a stack is green, **Merge & serve** it.
 
 On phones you see one column at a time, with an Orders / Prep / Kitchen tab bar at the bottom.
+
+For development commands, change guidelines, and bug-report details, see
+[Contributing](CONTRIBUTING.md).
 
 ## Copilot canvas
 
@@ -262,4 +297,4 @@ If time runs out before you fulfill three orders, restart and try again with a n
 - `assets/invertocat-pink.svg`: current [official GitHub Invertocat](https://brand.github.com/foundations/logo) in dark pink (`#D5346B`), used as the page favicon. The Copilot canvas tab icon is app-owned and cannot be changed from this repo.
 - `assets/checker-icon.svg`: dark and light pink checker pattern.
 - `theme-cozy.css`: optional hand-drawn skin. Add `?skin=cozy` to the URL.
-- `theme-hub.css`: the default "Hub" view. It shows a GitHub Issues-style list (Issues · Copilot · Pull requests) in the booth theme. Add `?fun` to the URL for the classic diner counter. The game logic is the same in both.
+- `theme-hub.css`: the default "Hub" view with Orders / Prep / Kitchen navigation in the booth theme. Add `?fun` to the URL for the classic diner counter. The game logic is the same in both.
