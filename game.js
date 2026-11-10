@@ -227,7 +227,6 @@
   function pickStep(o, id, on) {
     if (stage(o) !== "plan") return;
     if (o.set.includes(id) !== on) toggle(o, id);
-    o.open = null;
   }
   function approve(o) {
     if (stage(o) !== "plan") return;
@@ -493,6 +492,7 @@
     $("#over-close").hidden = !won;
     renderShiftSummary();
     if (!overDlg.open) overDlg.showModal();
+    $("#over-title").focus();
   }
   function renderShiftSummary() {
     const served = S.orders.filter(o => o.status === "served");
@@ -528,7 +528,6 @@
     S.phase = "won";
     settleTips();
     stopTimer();
-    showCert();
     showShiftSummary(true);
   }
   // Settle earned tips before a terminal screen stops the animation clock.
@@ -581,8 +580,25 @@
   // the customer you're talking to is expanded with their order in a speech bubble.
   // What sits on the counter between stools (above seat i); null leaves the counter bare.
   const DECOR = [null, "condiments", "splatter", "napkins", "coffee", null];
+  function preserveRegionFocus(region, render, fallback) {
+    const focused = document.activeElement;
+    const control = region.contains(focused) ? focused.closest("[data-act]") : null;
+    const action = control && { ...control.dataset };
+    render();
+    if (!control || (control.isConnected && !control.disabled)) return;
+    const controls = [...region.querySelectorAll("button[data-act], [role='button'][data-act]")].filter(el => !el.disabled);
+    const target = controls.find(el => el.dataset.act === action.act && el.dataset.arg === action.arg)
+      || fallback(controls, action) || region.closest(".pane");
+    if (target) {
+      if (target.matches(".pane")) target.tabIndex = -1;
+      target.focus({ preventScroll: true });
+    }
+  }
   function renderCounter() {
     if (HUB) return renderIssues();
+    preserveRegionFocus(counterEl, renderSeats, controls => controls[0]);
+  }
+  function renderSeats() {
     const people = S.orders.filter(seated);
     const a = active(), front = a && a.status !== "served" ? a : atRegister();
     if (!counterEl.firstChild) counterEl.innerHTML = `
@@ -635,6 +651,10 @@
   const HUB_STATE = { line: "New", ordering: "Needs prompt", returned: "Reopened", cooking: "Copilot is cooking", checks: "Running checks", failing: "A check failed: investigate", ready: "All checks passed: ready to merge", deploying: "Deploying", served: "Closed" };
   let issueResize = null;
   function renderIssues() {
+    preserveRegionFocus(counterEl, renderIssueRows,
+      controls => controls.find(el => el.dataset.act === "hubtab" && el.dataset.arg === hubTab));
+  }
+  function renderIssueRows() {
     let box = counterEl.querySelector(".hi-box");
     const previousHeight = box?.getBoundingClientRect().height;
     issueResize?.cancel();
@@ -672,10 +692,17 @@
 
   // ---------- Right column: the kitchen. Every approved order cooks here as a PR stack. ----------
   function renderKitchen() {
+    preserveRegionFocus(kitchenEl, renderKitchenCards,
+      (controls, action) => controls.find(el => el.dataset.act === "order" && el.dataset.arg === action.arg) || controls[0]);
+  }
+  function renderKitchenCards() {
     const list = pickupList();
     const ready = list.filter(o => o.status === "ready").length;
     $("#k-badge").textContent = ready || "";
     $("#cp-badge").textContent = S.orders.filter(x => x.status === "ordering" || x.status === "returned" || x.status === "failing").length || "";
+    const attention = +$("#cp-badge").textContent;
+    $('#m-tabs [data-arg="cp"]').setAttribute("aria-label", `Prep, ${attention} ${attention === 1 ? "order needs" : "orders need"} attention`);
+    $('#m-tabs [data-arg="kitchen"]').setAttribute("aria-label", `Kitchen, ${ready} ${ready === 1 ? "order" : "orders"} ready to serve`);
     if (!list.length) { kitchenEl.innerHTML = `<div class="k-empty"><div class="empty-icon">🍳</div><p>Approved plans cook here as stacked PRs. Merge them when they're green.</p></div>`; return; }
     if (kitchenEl.querySelector(".k-empty")) kitchenEl.innerHTML = "";
     const keep = new Set();
@@ -897,7 +924,7 @@
       if (!s.opt || frozen) return `<li><div class="step">${inner}</div></li>`;
       const open = o.open === s.opt, opt = d.opts.find(x => x.id === s.opt), base = d.steps[s.i][1];
       const why = o.asked.includes(s.opt) ? "You asked for this in your prompt." : "Your prompt didn't say, so Copilot assumed. Is it what they ordered?";
-      const choice = (on, title, sub) => `<button class="ch ${s.on === on ? "on" : ""}" role="radio" aria-checked="${s.on === on}" data-act="pick" data-arg="${s.opt}:${on ? 1 : 0}">
+      const choice = (on, title, sub) => `<button class="ch ${s.on === on ? "on" : ""}" role="radio" aria-checked="${s.on === on}" tabindex="${s.on === on ? 0 : -1}" data-act="pick" data-arg="${s.opt}:${on ? 1 : 0}">
           <span class="ch-dot" aria-hidden="true"></span><span class="ch-txt"><b>${esc(title)}</b><small>${sub}</small></span></button>`;
       return `<li class="${open ? "open" : ""}"><button class="step toggle ${o.flag.includes(s.opt) ? "flag" : ""}" data-act="expand" data-arg="${s.opt}" aria-expanded="${open}">${inner}<span class="swap" aria-hidden="true">${open ? "▴" : "Change ▾"}</span></button>
         ${open ? `<div class="choices"><div class="ch-why">${why}</div><div class="ch-list" role="radiogroup" aria-label="Choose a version of this step">
@@ -912,26 +939,14 @@
   }
 
   // ---------- Celebrations ----------
-  function fitCertificate() {
-    if (!certEl.classList.contains("show")) return;
-    const inner = certEl.querySelector(".cert-inner");
-    inner.style.transform = "none";
-    const padding = getComputedStyle(certEl);
-    const availableWidth = certEl.clientWidth - parseFloat(padding.paddingLeft) - parseFloat(padding.paddingRight);
-    const availableHeight = certEl.clientHeight - parseFloat(padding.paddingTop) - parseFloat(padding.paddingBottom);
-    const scale = Math.min(1, availableWidth / inner.offsetWidth, availableHeight / inner.offsetHeight);
-    inner.style.transform = `scale(${scale})`;
-    inner.style.marginTop = `${Math.max(0, (availableHeight - inner.offsetHeight * scale) / 2)}px`;
-  }
-  window.addEventListener("resize", fitCertificate);
-  window.visualViewport?.addEventListener("resize", fitCertificate);
-
   function showCert() {
+    if (S.phase !== "won" || certEl.open) return;
     $("#cert-name").textContent = S.chef || "A Very Good Chef";
     $("#cert-body").innerHTML = `fulfilled ${GOAL} orders in <b>${mmss(S.elapsed)}</b>.`;
     $("#cert-date").textContent = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
     certEl.classList.add("show");
-    fitCertificate();
+    certEl.showModal();
+    $("#cert-title").focus();
     sfx("win");
   }
 
@@ -963,7 +978,12 @@
   // Phones show one column at a time, switched by the tab bar.
   function setView(v) {
     shell.dataset.view = v;
-    document.querySelectorAll("#m-tabs button").forEach(b => b.classList.toggle("on", b.dataset.arg === v));
+    document.querySelectorAll("#m-tabs button").forEach(b => {
+      const current = b.dataset.arg === v;
+      b.classList.toggle("on", current);
+      if (current) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    });
     if (v === "line") renderCounter();
     if (v === "cp") { paneKey = ""; renderPane(); }
   }
@@ -983,9 +1003,9 @@
     requestAnimationFrame(() => {
       const t = bodyEl.querySelector(".ck-fail") || bodyEl.querySelector(".steps li.open") || bodyEl.querySelector(".plan:not(.frozen)");
       if (!t) return;
-      t.scrollIntoView({ block: "center", behavior: "smooth" });
+      t.scrollIntoView({ block: "center", behavior: scrollBehavior() });
       t.classList.remove("spot"); void t.offsetWidth; t.classList.add("spot");
-      t.querySelector(".ch, .ck-fix:not([disabled])")?.focus({ preventScroll: true });
+      t.querySelector('.ch[tabindex="0"], .ck-fix:not([disabled])')?.focus({ preventScroll: true });
     });
   }
   function nextOrder() {
@@ -1000,6 +1020,7 @@
     stopTimer();
     modelNotices.clear();
     certEl.classList.remove("show");
+    if (certEl.open) certEl.close();
     clearTimeout(cookT); cookT = null;
     newShift();
     counterEl.innerHTML = ""; kitchenEl.innerHTML = "";
@@ -1008,6 +1029,7 @@
     input.value = "";
     renderAll();
     if (!infoDlg.open) infoDlg.showModal();
+    nameInput.focus();
     saveSoon();
   }
 
@@ -1015,7 +1037,7 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-act]");
     if (!b || b.disabled) return;
-    if (b.dataset.act === "summary-close") { overDlg.close(); return; }
+    if (b.dataset.act === "summary-close") { overDlg.close(); showCert(); return; }
     if (b.dataset.act === "restart" && canvas && loaded && !lifecycleFailed && !controller.canEdit()) {
       controller.resume().then(ok => { if (ok) restart(); }).catch(() => {});
       return;
@@ -1040,7 +1062,7 @@
         // Phones: jump to the counter so you see them eat, say thanks, and tip
         if (mobile.matches) {
           setView("line");
-          counterEl.querySelectorAll(".seat")[so?.seat]?.scrollIntoView({ block: "center", behavior: "smooth" });
+          counterEl.querySelectorAll(".seat")[so?.seat]?.scrollIntoView({ block: "center", behavior: scrollBehavior() });
         }
         return;
       }
@@ -1079,6 +1101,21 @@
     o.text = input.value = Copilot.promptText(o.draft.dish, o.draft.opts);
     o.help = null;
     renderPane();
+  });
+  const scrollBehavior = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+  document.addEventListener("keydown", e => {
+    const radio = e.target.closest?.('[role="radio"][data-act="pick"]');
+    if (!radio || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key) || !canEdit()) return;
+    e.preventDefault();
+    const choices = [...radio.closest('[role="radiogroup"]').querySelectorAll('[role="radio"]')];
+    const direction = ["ArrowLeft", "ArrowUp"].includes(e.key) ? -1 : 1;
+    const index = e.key === "Home" ? 0 : e.key === "End" ? choices.length - 1
+      : (choices.indexOf(radio) + direction + choices.length) % choices.length;
+    const arg = choices[index].dataset.arg, [id, on] = arg.split(":");
+    pickStep(active(), id, on === "1");
+    renderPane();
+    [...bodyEl.querySelectorAll('[data-act="pick"]')].find(el => el.dataset.arg === arg)?.focus({ preventScroll: true });
+    saveSoon();
   });
   input.addEventListener("input", () => {
     if (!canEdit()) return;
@@ -1160,8 +1197,21 @@
     if (!canvas && !resumed) { resumed = true; beginShift(); }
   });
   overDlg.addEventListener("cancel", e => {
-    if (S.phase !== "won") e.preventDefault();
+    e.preventDefault();
+    if (S.phase === "won") { overDlg.close(); showCert(); }
   });
+  certEl.addEventListener("cancel", e => e.preventDefault());
+  certEl.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    const buttons = [...certEl.querySelectorAll("button:not([disabled])")];
+    const first = buttons[0], last = buttons.at(-1);
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === $("#cert-title"))) {
+      e.preventDefault(); last?.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first?.focus();
+    }
+  });
+  certEl.addEventListener("close", () => { if (!certEl.open) certEl.classList.remove("show"); });
 
   // Test hooks
   const api = { tryFix, tick, select, active: () => active(), sendPrompt, approve, serve, help, toggle, fleetAll, restart, renderAll,

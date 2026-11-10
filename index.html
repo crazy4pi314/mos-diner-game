@@ -85,9 +85,9 @@
   </section>
 </div>
 <nav class="m-tabs" id="m-tabs" aria-label="Views">
-  <button data-act="view" data-arg="line" class="on">🧍 Orders</button>
-  <button data-act="view" data-arg="cp">✨ Prep<span class="badge" id="cp-badge"></span></button>
-  <button data-act="view" data-arg="kitchen">🍳 Kitchen<span class="badge" id="k-badge"></span></button>
+  <button data-act="view" data-arg="line" class="on" aria-current="page">🧍 Orders</button>
+  <button data-act="view" data-arg="cp">✨ Prep<span class="badge" id="cp-badge" aria-hidden="true"></span></button>
+  <button data-act="view" data-arg="kitchen">🍳 Kitchen<span class="badge" id="k-badge" aria-hidden="true"></span></button>
 </nav>
 
 <div class="toast" id="toast" role="status"></div>
@@ -114,7 +114,7 @@
 </dialog>
 
 <dialog class="info-dialog failure-dialog zigzag-bottom" id="over-dialog" aria-labelledby="over-title">
-  <header><h2 id="over-title">Shift's over!</h2></header>
+  <header><h2 id="over-title" tabindex="-1">Shift's over!</h2></header>
   <div class="info-body">
     <p><span id="over-summary">The shift ended before 3 orders were fulfilled.</span><br>Nice work keeping the diner moving!</p>
     <div id="over-orders" class="shift-summary" aria-label="Served orders"></div>
@@ -125,12 +125,12 @@
   </footer>
 </dialog>
 
-<div class="cert-overlay" id="cert" role="dialog" aria-modal="true" aria-labelledby="cert-title">
+<dialog class="cert-overlay" id="cert" aria-labelledby="cert-title">
   <div class="cert-inner">
     <div class="certificate">
       <div class="cert-frame">
         <img class="cert-brand" src="assets/mos-cert-logo.svg" alt="Mo's Diner" />
-        <div class="cert-title" id="cert-title">Gift Certificate</div>
+        <h2 class="cert-title" id="cert-title" tabindex="-1">Gift Certificate</h2>
         <p class="cert-body">This certifies that</p>
         <div class="cert-user">
           <div class="cert-name" id="cert-name">A Very Good Chef</div>
@@ -143,7 +143,7 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 <script src="menu-file.js"></script>
 <script src="orders.js"></script>

@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createDinerHost } from "./hosting.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const trace = message => { if (process.env.DINER_BROWSER_TRACE) console.error(`[browser] ${message}`); };
 async function until(action, message, attempts = 100) {
     for (let i = 0; i < attempts; i++) {
         const result = await action();
@@ -49,7 +49,10 @@ async function connect(url, runtime = true) {
         },
     };
 }
-test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout: 180000 }, async t => {
+const accessibilityOnly = process.env.DINER_BROWSER_ACCESSIBILITY_ONLY === "1";
+test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion and reflow"
+    : "Edge: offline startup, retry, lifecycle and deterministic play", { timeout: 180000 }, async t => {
+    try {
     const candidates = [process.env.DINER_EDGE, process.env["ProgramFiles(x86)"] && join(process.env["ProgramFiles(x86)"], "Microsoft", "Edge", "Application", "msedge.exe"),
         process.env.ProgramFiles && join(process.env.ProgramFiles, "Microsoft", "Edge", "Application", "msedge.exe")].filter(Boolean);
     let executable;
@@ -57,7 +60,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         try { await access(candidate); executable = candidate; break; } catch { /* Try the next installed location. */ }
     }
     if (!executable) return t.skip("Microsoft Edge not installed; set DINER_EDGE to run browser checks.");
-    const directory = await mkdtemp(join(tmpdir(), "diner-edge-test-"));
+    const directory = await mkdtemp(join(root, ".diner-edge-test-"));
     const profile = join(directory, "profile"), stateDirectory = join(directory, "state");
     let modelBehavior = "ok", modelAborted = false, modelCalls = 0, finishModel;
     let runtimeAvailable = true;
@@ -88,12 +91,21 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     const connections = [];
     let browser;
     t.after(async () => {
+        trace("cleaning up browser");
         for (const connection of connections) connection.close();
         if (browser) await browser.send("Browser.close").catch(() => {});
+        if (process.platform === "win32") {
+            const cleanup = spawn("powershell.exe", ["-NoProfile", "-Command",
+                `$profilePath = '${profile.replaceAll("'", "''")}'; Get-CimInstance Win32_Process -Filter "Name = 'msedge.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($profilePath) } | ForEach-Object { Stop-Process -Id $_.ProcessId -ErrorAction SilentlyContinue }`],
+            { stdio: "ignore" });
+            await new Promise(resolve => cleanup.once("exit", resolve));
+        }
         edge.kill();
         await host.shutdown();
+        trace("host stopped");
         await wait(500);
         await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+        trace("browser profile removed");
     });
     const port = await until(async () => {
         try { return Number((await readFile(join(profile, "DevToolsActivePort"), "utf8")).split("\n")[0]); }
@@ -102,6 +114,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     const version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
     browser = await connect(version.webSocketDebuggerUrl, false);
     async function page(address, { before = "", ready = true } = {}) {
+        trace(`opening page ${connections.length + 1}`);
         const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
         const connection = await connect(target.webSocketDebuggerUrl);
         connection.closePage = () => browser.send("Target.closeTarget", { targetId: target.id });
@@ -114,15 +127,30 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         await until(() => connection.evaluate(`!!window.__mo ${ready ? '&& !document.querySelector("#start-shift").disabled' : ""}`), "Game did not become ready.");
         // Headless tabs are not necessarily foreground. Control visibility explicitly.
         await connection.evaluate('Object.defineProperty(document, "hidden", { configurable: true, value: false })');
+        trace(`page ${connections.length} ready`);
         return connection;
     }
     async function resume(connection) {
+        trace("resuming shift");
         await until(() => connection.evaluate('!document.querySelector("#start-shift").disabled'),
             "The visible Start/Resume button did not become ready.");
         await connection.evaluate('document.querySelector("#start-shift").click()');
         await until(() => connection.evaluate('__mo.S.timer !== null && !document.querySelector("#info-dialog").open'),
-            "The ready Start/Resume button did not start the shift.");
+            "The ready Start/Resume button did not start the shift.").catch(async error => {
+                const state = await connection.evaluate(`({
+                  phase: __mo.S.phase, hidden: document.hidden, dialog: document.querySelector("#info-dialog").open,
+                  disabled: document.querySelector("#start-shift").disabled,
+                  message: document.querySelector("#lifecycle-message").textContent
+                })`);
+                throw new Error(`${error.message} ${JSON.stringify(state)}`);
+            });
+        trace("shift running");
     }
+    async function key(connection, value, modifiers = 0) {
+        await connection.send("Input.dispatchKeyEvent", { type: "keyDown", key: value, modifiers });
+        await connection.send("Input.dispatchKeyEvent", { type: "keyUp", key: value, modifiers });
+    }
+    if (!accessibilityOnly) {
     for (const skin of ["default", "cozy"]) {
         for (const view of ["hub", "classic"]) {
             const id = `offline-${skin}-${view}`;
@@ -239,6 +267,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await interrupted.evaluate("__mo.pause()");
     await host.close("suspended");
     await interrupted.closePage();
+    }
 
     const first = await page(url);
     assert.match(await first.evaluate("navigator.userAgent"), /Edg/);
@@ -295,6 +324,44 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     })()`), { aligned: true, contained: true }, "Long names must preserve aligned, horizontally contained panes.");
     await first.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 800, deviceScaleFactor: 1, mobile: false });
     assert.deepEqual(await first.evaluate(`(() => {
+      const row = document.querySelector('.hi-row[data-act="order"]'), id = row.dataset.arg;
+      row.focus(); __mo.renderAll();
+      const rowPreserved = document.activeElement.dataset.arg === id && document.activeElement.matches(".hi-row");
+      const closed = document.querySelector('[data-act="hubtab"][data-arg="closed"]');
+      closed.focus(); closed.click(); __mo.renderAll();
+      const filterPreserved = document.activeElement.dataset.act === "hubtab" && document.activeElement.dataset.arg === "closed";
+      document.querySelector('[data-act="hubtab"][data-arg="open"]').click();
+      const o = __mo.S.orders.find(o => String(o.id) === id), original = { ...o };
+      document.querySelector('.hi-row[data-arg="' + id + '"]').focus();
+      o.status = "served"; __mo.renderAll();
+      const removedRowFallback = document.activeElement.dataset.act === "hubtab" && document.activeElement.dataset.arg === "open";
+      Object.assign(o, original, { handed: true, dish: o.want.dish, status: "ready" }); __mo.renderAll();
+      const action = () => document.querySelector('#kitchen [data-act="serve"][data-arg="' + id + '"]');
+      action().focus(); __mo.renderAll();
+      const actionPreserved = document.activeElement === action();
+      o.status = "deploying"; __mo.renderAll();
+      const changedActionFallback = document.activeElement.matches(".k-card-head") && document.activeElement.dataset.arg === id;
+      o.status = "served"; __mo.renderAll();
+      const removedCardFallback = document.activeElement.matches(".pane.kitchen");
+      Object.assign(o, original); __mo.renderAll();
+      return { rowPreserved, filterPreserved, removedRowFallback, actionPreserved, changedActionFallback, removedCardFallback };
+    })()`), { rowPreserved: true, filterPreserved: true, removedRowFallback: true,
+        actionPreserved: true, changedActionFallback: true, removedCardFallback: true });
+    await first.send("Emulation.setDeviceMetricsOverride", { width: 800, height: 800, deviceScaleFactor: 1, mobile: false });
+    await until(() => first.evaluate('document.documentElement.classList.contains("tabbed")'), "Compact layout did not settle.");
+    for (const view of ["line", "cp", "kitchen"]) {
+        assert.deepEqual(await first.evaluate(`(() => {
+          document.querySelector('#m-tabs [data-arg="${view}"]').click();
+          return [...document.querySelectorAll('#m-tabs [aria-current="page"]')].map(button => button.dataset.arg);
+        })()`), [view], "Compact navigation must expose exactly one current view.");
+    }
+    assert.deepEqual(await first.evaluate(`["cp", "kitchen"].map(view =>
+      document.querySelector('#m-tabs [data-arg="' + view + '"]').getAttribute("aria-label"))`),
+        ["Prep, 1 order needs attention", "Kitchen, 0 orders ready to serve"]);
+    await first.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 800, deviceScaleFactor: 1, mobile: false });
+    await until(() => first.evaluate('innerWidth === 1440 && !document.documentElement.classList.contains("tabbed")'),
+        "Desktop layout did not settle after compact navigation checks.");
+    assert.deepEqual(await first.evaluate(`(() => {
       const chip = document.querySelector('[data-act="dish"]');
       chip.focus(); chip.click();
       const afterClick = document.activeElement.dataset.arg === chip.dataset.arg;
@@ -323,11 +390,28 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
       const expandedFocus = document.activeElement.dataset.act;
       const choice = document.querySelector('[data-act="pick"][aria-checked="true"]');
       choice.focus(); choice.click();
-      const collapsedFocus = document.activeElement.dataset.act;
+      const pickedFocus = document.activeElement.dataset.act;
       __mo.help(o); __mo.renderAll();
-      return { promptFocused, expandedFocus, collapsedFocus,
+      return { promptFocused, expandedFocus, pickedFocus,
         correctHint: [...document.querySelectorAll(".cp-hint")].at(-1).textContent.includes("The plan matches") };
-    })()`), { promptFocused: true, expandedFocus: "expand", collapsedFocus: "expand", correctHint: true });
+    })()`), { promptFocused: true, expandedFocus: "expand", pickedFocus: "pick", correctHint: true });
+    for (const arrow of ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"]) {
+        const before = await first.evaluate(`(() => {
+          const radio = document.querySelector('[role="radio"][aria-checked="true"]'); radio.focus();
+          return radio.dataset.arg;
+        })()`);
+        await key(first, arrow);
+        assert.deepEqual(await first.evaluate(`(() => {
+          const focused = document.activeElement, group = focused.closest('[role="radiogroup"]');
+          return { selected: focused.getAttribute("aria-checked"), tabStops: group.querySelectorAll('[tabindex="0"]').length,
+            expected: focused.dataset.arg.endsWith(":${arrow === "Home" ? 0 : arrow === "End" ? 1 : before.endsWith(":1") ? 0 : 1}"),
+            status: __mo.active().status, prs: __mo.active().prs.length };
+        })()`), { selected: "true", tabStops: 1, expected: true, status: "ordering", prs: 0 });
+    }
+    await key(first, "Tab");
+    assert.equal(await first.evaluate('document.activeElement.getAttribute("role") === "radio"'), false,
+        "Tab must leave the radio group, rather than stop on its unchecked option.");
+    trace("Orders/Kitchen focus, compact semantics and radio keyboard checks passed");
     assert.deepEqual(await first.evaluate(`(() => {
       const o = __mo.active();
       o.status = "failing"; o.failKind = "flaky";
@@ -393,6 +477,7 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
         throw new Error(`${error.message} Lifecycle: ${JSON.stringify(lifecycle)} Runtime errors: ${JSON.stringify(first.errors)}`);
     }
     await host.close("edge");
+    await first.closePage();
     const reopened = await host.open("fresh", { gameId: "browser" });
     const second = await page(reopened);
     assert.equal(await second.evaluate("__mo.S.phase"), "welcome");
@@ -459,31 +544,80 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
       a.serve(o);
     })()`);
     assert.equal(await second.evaluate("__mo.S.served"), 3);
-    assert.match(await second.evaluate('document.querySelector("#cert-body").textContent'), /fulfilled 3 orders in/);
-    assert.equal(await second.evaluate('document.querySelector("#cert").classList.contains("show")'), true);
-    await second.evaluate(`(() => {
-      document.querySelector("#cert-name").textContent = "ExtraordinarilyLongChefUsername";
-    })()`);
-    await second.send("Emulation.setDeviceMetricsOverride", { width: 320, height: 320, deviceScaleFactor: 1, mobile: true });
-    const certificateBounds = await second.evaluate(`(() => {
-      window.dispatchEvent(new Event("resize"));
-      const rect = document.querySelector(".cert-inner").getBoundingClientRect();
-      return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: innerWidth, height: innerHeight };
-    })()`);
-    assert.ok(certificateBounds.left >= 0 && certificateBounds.top >= 0 &&
-      certificateBounds.right <= certificateBounds.width && certificateBounds.bottom <= certificateBounds.height,
-      `certificate should fit a 320x320 viewport: ${JSON.stringify(certificateBounds)}`);
-    await second.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
-    await second.evaluate('window.dispatchEvent(new Event("resize"))');
+    assert.equal(await second.evaluate('document.querySelector("#cert").open'), false,
+        "The summary must be read before opening the certificate.");
     assert.equal(await second.evaluate('document.querySelector("#over-dialog").open'), true);
+    assert.equal(await second.evaluate('document.activeElement.id'), "over-title");
     assert.equal(await second.evaluate('document.querySelector("#over-title").textContent'), "Shift complete!");
     assert.equal(await second.evaluate('document.querySelectorAll("#over-orders li").length'), 3);
     assert.equal(await second.evaluate('document.querySelector("#over-restart").hidden'), true);
     assert.equal(await second.evaluate('document.querySelector("#over-close").hidden'), false);
     await second.evaluate('document.querySelector("#over-close").click()');
     assert.equal(await second.evaluate('document.querySelector("#over-dialog").open'), false);
+    assert.match(await second.evaluate('document.querySelector("#cert-body").textContent'), /fulfilled 3 orders in/);
+    assert.deepEqual(await second.evaluate(`(() => {
+      const dialog = document.querySelector("#cert");
+      const initialFocus = document.activeElement.id;
+      document.querySelector("#reset-btn").focus();
+      return { nativeModal: dialog.matches("dialog:modal"), visible: dialog.classList.contains("show"),
+        initialFocus, backgroundBlocked: dialog.contains(document.activeElement) };
+    })()`), { nativeModal: true, visible: true, initialFocus: "cert-title", backgroundBlocked: true });
+    for (const modifiers of [0, 0, 8, 8]) {
+        await key(second, "Tab", modifiers);
+        assert.equal(await second.evaluate('document.querySelector("#cert").contains(document.activeElement)'), true,
+            "Tab and Shift+Tab must stay within the certificate.");
+    }
+    await key(second, "Escape");
+    assert.equal(await second.evaluate('document.querySelector("#cert").open'), true);
+    assert.equal(await second.evaluate(`(() => {
+      const luminance = color => {
+        const rgb = color.match(/[\\d.]+/g).slice(0, 3).map(Number).map(value => value / 255)
+          .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+        return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+      };
+      const contrast = (foreground, background) => {
+        const a = luminance(foreground), b = luminance(background);
+        return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+      };
+      const certificate = getComputedStyle(document.querySelector(".certificate"));
+      const selectors = [".cert-body", ".cert-small", ".cert-date", ".cert-good", ".cert-actions .btn"];
+      return selectors.every(selector => {
+        const style = getComputedStyle(document.querySelector(selector));
+        const background = style.backgroundColor === "rgba(0, 0, 0, 0)" ? certificate.backgroundColor : style.backgroundColor;
+        return contrast(style.color, background) >= 4.5;
+      });
+    })()`), true, "Certificate text, reward and focused replay must meet normal-text contrast.");
+    await second.evaluate(`(() => {
+      document.querySelector("#cert-name").textContent = "ExtraordinarilyLongChefUsername";
+    })()`);
+    await second.send("Emulation.setDeviceMetricsOverride", { width: 320, height: 320, deviceScaleFactor: 1, mobile: true });
+    const certificateBounds = await second.evaluate(`(() => {
+      window.dispatchEvent(new Event("resize"));
+      const dialog = document.querySelector("#cert"), inner = dialog.querySelector(".cert-inner");
+      const rect = inner.getBoundingClientRect(), button = inner.querySelector("button");
+      button.focus(); button.scrollIntoView({ block: "end", behavior: "instant" });
+      const replay = button.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, width: innerWidth, transform: getComputedStyle(inner).transform,
+        overflow: dialog.scrollWidth > dialog.clientWidth,
+        replayVisible: replay.top >= 0 && replay.bottom <= innerHeight,
+        replayHeight: replay.height, copySize: parseFloat(getComputedStyle(document.querySelector(".cert-small")).fontSize) };
+    })()`);
+    assert.ok(certificateBounds.left >= 0 && certificateBounds.right <= certificateBounds.width &&
+      certificateBounds.transform === "none" && !certificateBounds.overflow && certificateBounds.replayVisible &&
+      certificateBounds.replayHeight >= 44 && certificateBounds.copySize >= 14,
+      `certificate should reflow and scroll without shrinking at 320x320: ${JSON.stringify(certificateBounds)}`);
+    await second.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+    await second.evaluate('window.dispatchEvent(new Event("resize"))');
     assert.equal(await second.evaluate('document.querySelector("#cert").classList.contains("show")'), true);
-    await second.evaluate("__mo.restart()");
+    await until(() => second.evaluate('!document.querySelector("#start-shift").disabled'),
+        "Certificate visibility must settle before replay.");
+    await second.evaluate('document.querySelector(\'#cert [data-act="restart"]\').click()');
+    await until(() => second.evaluate('__mo.S.phase === "welcome"'), "Certificate replay did not return to welcome.");
+    assert.deepEqual(await second.evaluate(`({ certificate: document.querySelector("#cert").open,
+      summary: document.querySelector("#over-dialog").open, welcome: document.querySelector("#info-dialog").open,
+      focus: document.activeElement.id, timer: __mo.S.timer, orders: __mo.S.orders.length })`),
+        { certificate: false, summary: false, welcome: true, focus: "chef-name", timer: null, orders: 0 });
+    trace("certificate modal, contrast, reflow and replay checks passed");
     await resume(second);
     await second.evaluate(`(() => {
       const a = __mo;
@@ -502,11 +636,14 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.equal(await second.evaluate('document.querySelector("#hud-served").textContent'), "3/3");
     assert.equal(await second.evaluate('document.querySelectorAll("#over-orders li").length'), 3);
     await host.close("fresh");
+    await second.closePage();
 
+    let wrapper, classic;
+    if (!accessibilityOnly) {
     // A canvas hidden with CSS has no Page Visibility event; intersection must pause it.
     const frameURL = await host.open("frame", { gameId: "frame" });
     const wrapperTarget = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
-    const wrapper = await connect(wrapperTarget.webSocketDebuggerUrl);
+    wrapper = await connect(wrapperTarget.webSocketDebuggerUrl);
     connections.push(wrapper);
     await wrapper.evaluate(`document.body.innerHTML = '<iframe style="width:1100px;height:700px" src="${frameURL}"></iframe>'`);
     const frameContext = await until(() => wrapper.contexts.find(context => context.origin === new URL(frameURL).origin),
@@ -536,9 +673,10 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     await until(() => frame.evaluate('__mo.S.timer !== null && !document.querySelector("#info-dialog").open'),
         "Visible embedded canvas did not resume after being hidden.");
     await host.close("frame");
+    await browser.send("Target.closeTarget", { targetId: wrapperTarget.id });
 
     const classicURL = await host.open("classic", { gameId: "classic-browser", view: "classic" });
-    const classic = await page(classicURL);
+    classic = await page(classicURL);
     await resume(classic);
     await classic.evaluate(`(() => {
       const a = __mo, o = a.active();
@@ -563,6 +701,8 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.equal(await classic.evaluate("__mo.S.banked"), 0);
     assert.equal(await classic.evaluate("__mo.S.orders.length"), 0);
     await host.close("classic");
+    await classic.closePage();
+    }
 
     for (const skin of ["default", "cozy"]) {
         for (const view of ["hub", "classic"]) {
@@ -639,6 +779,44 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
               return [getComputedStyle(button.querySelector(".help-sparkle")).animationName,
                 getComputedStyle(button, "::before").animationName, getComputedStyle(button, "::after").animationName];
             })()`), ["none", "none", "none"]);
+            await menuPage.send("Emulation.setDeviceMetricsOverride", { width: 600, height: 800, deviceScaleFactor: 1, mobile: false });
+            await until(() => menuPage.evaluate('innerWidth === 600 && document.documentElement.classList.contains("tabbed")'),
+                "Compact layout did not settle before scrolling and focus checks.");
+            await key(menuPage, "Tab");
+            assert.deepEqual(await menuPage.evaluate(`(async () => {
+              const o = __mo.active();
+              __mo.sendPrompt(o, Copilot.promptText(o.want.dish, o.want.opts));
+              Object.assign(o, { handed: true, status: "cooking", pending: Copilot.cookingPlan(o.dish, o.set, {}), prs: [] });
+              __mo.renderAll();
+              const spinner = getComputedStyle(document.querySelector(".bstep.now .pr-st")).animationName;
+              o.pending = []; o.status = "checks";
+              o.checks = Checks.RUNS.map((check, i) => ({ ...check, state: i ? "queued" : "running" }));
+              __mo.renderAll();
+              const checkBlink = getComputedStyle(document.querySelector(".ck.running .ck-ic")).animationName;
+              o.status = "returned"; o.flag = [Copilot.dishOf(o.dish).opts[0].id]; __mo.renderAll();
+              const scrolls = [], original = Element.prototype.scrollIntoView;
+              try {
+                Element.prototype.scrollIntoView = function(options) { scrolls.push(options.behavior); };
+                document.querySelector('#kitchen [data-act="goto"]').click();
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                o.set = [...o.want.opts]; o.status = "ready"; __mo.renderAll();
+                document.querySelector('#kitchen [data-act="serve"]').click();
+              } finally { Element.prototype.scrollIntoView = original; }
+              __mo.restart(); await __mo.resume();
+              document.querySelector('#m-tabs [data-arg="cp"]').click();
+              const prompt = document.querySelector("#prompt"); prompt.focus();
+              const style = getComputedStyle(prompt), rect = prompt.getBoundingClientRect();
+              const card = prompt.closest(".compose-box").getBoundingClientRect();
+              const outline = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+              return { spinner, checkBlink, scrolls, visibleFocus: style.outlineStyle !== "none" && outline >= 2,
+                focusContained: rect.left - outline >= card.left && rect.right + outline <= card.right &&
+                  rect.top - outline >= card.top && rect.bottom + outline <= card.bottom };
+            })()`), { spinner: "none", checkBlink: "none", scrolls: view === "classic" ? ["instant", "instant"] : ["instant"],
+                visibleFocus: true, focusContained: true }, `${skin}/${view}: reduced motion and keyboard prompt focus`);
+            trace(`${skin}/${view}: reduced-motion descendants, scrolling and prompt focus passed`);
+            await menuPage.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+            await until(() => menuPage.evaluate('innerWidth === 1440 && !document.documentElement.classList.contains("tabbed")'),
+                "Desktop layout did not settle after scrolling and focus checks.");
             await menuPage.send("Emulation.setEmulatedMedia", { features: [] });
             for (const remove of [false, true]) {
                 await menuPage.evaluate(`(async () => {
@@ -667,6 +845,11 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
             await menuPage.evaluate("__mo.pause()");
             await menuPage.closePage();
         }
+    }
+    if (accessibilityOnly) {
+        assert.equal(connections.reduce((count, connection) => count + connection.errors.length, 0), 0);
+        trace("all accessibility checks passed");
+        return;
     }
 
     const standalone = await page(pathToFileURL(join(root, "index.html")).href);
@@ -845,4 +1028,8 @@ test("Edge: offline startup, retry, lifecycle and deterministic play", { timeout
     assert.equal(await broken.evaluate('document.querySelector("#info-dialog").open'), true);
     assert.equal(await broken.evaluate("__mo.S.timer"), null);
     assert.equal(first.errors.length + second.errors.length + broken.errors.length + classic.errors.length + standalone.errors.length + wrapper.errors.length + deterministic.errors.length, 0);
+    } catch (error) {
+        trace(error.stack);
+        throw error;
+    }
 });
