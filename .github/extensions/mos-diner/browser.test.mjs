@@ -770,6 +770,11 @@ test(recoveryOnly ? "Edge: save timeout recovery preserves the live shift"
         await scores.evaluate(`Promise.all(document.querySelector("#cert").getAnimations({ subtree: true }).map(a => a.finished))`);
         await until(() => scores.evaluate('!document.querySelector("#toast").classList.contains("show")'),
             "The opening toast must clear before capturing the final screen.");
+        await scores.evaluate(`(() => {
+          const toast = document.querySelector("#toast");
+          getComputedStyle(toast).transform;
+          return Promise.all(toast.getAnimations().map(a => a.finished));
+        })()`);
         const screenshot = await scores.send("Page.captureScreenshot", { format: "png" });
         await writeFile(process.env.DINER_TICKET_SCREENSHOT, Buffer.from(screenshot.data, "base64"));
     }
