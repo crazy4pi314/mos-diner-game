@@ -17,3 +17,5 @@ For visible UI changes, include screenshots when useful. Otherwise, write N/A.
 - [ ] Menu changes include regenerated `menu-file.js`, if applicable.
 - [ ] Canvas assets are allowlisted in `hosting.mjs`, if applicable.
 - [ ] Timing and animation changes preserve pausing and reduced-motion behavior.
+- [ ] Logs and screenshots contain no tokens, personal paths, or private session data.
+- [ ] New assets include source/license details and preserve existing notices, if applicable.

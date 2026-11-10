@@ -9,6 +9,8 @@ assignees: ""
 ## What happened?
 
 Describe the problem and its impact.
+For suspected vulnerabilities, use the repository's Security tab to report
+privately instead of posting here. See SECURITY.md.
 
 ## Steps to reproduce
 
@@ -20,11 +22,11 @@ Describe the problem and its impact.
 
 ## Environment
 
-- Standalone browser or Copilot canvas:
-- Browser or Copilot host and version:
+- GitHub Copilot app version:
+- Developer browser test environment, if applicable:
 - Operating system:
-- View (hub or classic):
-- Theme (default or cozy):
+- Canvas size:
+- Revision or download date:
 
 ## Errors or screenshots
 
