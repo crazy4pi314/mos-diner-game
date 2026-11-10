@@ -77,6 +77,13 @@ always use the local deterministic parser.
 The canvas switches to tabs at 900px.
 CSS and game navigation use the same media query, including when the panel resizes.
 Short panels scroll game content and dialog bodies; the certificate scrolls to its replay button.
+The prompt field has an inset-safe keyboard-focus outline using the theme's text
+color. Certificate copy uses dark rose on light pink (5.77:1); the replay button
+uses white on brand pink (4.63:1), or white on dark rose on hover (9.46:1), with a
+two-color keyboard-focus ring. Certificate artwork is constrained to its content
+width, copy wraps, and the replay button has a minimum layout height of 44px.
+Reduced-motion styles also disable the cooking-step spinner and running-check
+blink, preserving their static status icons and labels.
 
 Each panel uses an ephemeral-port HTTP server bound only to `127.0.0.1`.
 Reopening an instance reuses its server; panel close and provider shutdown
