@@ -78,6 +78,24 @@ The canvas switches to tabs at 900px.
 CSS and game navigation use the same media query, including when the panel resizes.
 Short panels scroll game content and dialog bodies; the certificate scrolls to its replay button.
 
+Keyboard focus stays with the same Orders or Kitchen action when background
+updates redraw it, with a nearby fallback when that action disappears. Compact
+navigation exposes the current view and describes its order counts. Plan choices
+use one Tab stop per radio group; arrow keys and Home/End select a version without
+approving the plan.
+
+Winning shows the shift summary before opening the certificate as a native modal
+dialog. Its title receives focus, background controls are inert, and replay
+returns to the welcome/name field with the clock stopped. Certificate content
+reflows and scrolls rather than scaling text and controls down to fit.
+The prompt field has an inset-safe keyboard-focus outline using the theme's text
+color. Certificate copy uses dark rose on light pink (5.77:1); the replay button
+uses white on brand pink (4.63:1), or white on dark rose on hover (9.46:1), with a
+two-color keyboard-focus ring. Certificate artwork is constrained to its content
+width, copy wraps, and the replay button has a minimum layout height of 44px.
+Reduced-motion styles also disable the cooking-step spinner and running-check
+blink, preserving their static status icons and labels.
+
 Each panel uses an ephemeral-port HTTP server bound only to `127.0.0.1`.
 Reopening an instance reuses its server; panel close and provider shutdown
 release it. Finishing a chat turn does not shut down the canvas server.
@@ -223,6 +241,16 @@ node --test --test-timeout=240000 .github\extensions\mos-diner\browser.test.mjs
 The browser test launches an isolated headless **Microsoft Edge** profile and
 removes it afterward. It skips when Edge is not installed; set `DINER_EDGE` to
 the executable path to enable it elsewhere.
+To run only the focused keyboard, modal, compact-navigation, reduced-motion,
+contrast, and certificate-reflow regressions:
+
+```powershell
+$env:DINER_BROWSER_ACCESSIBILITY_ONLY='1'; node --test --test-timeout=180000 .github\extensions\mos-diner\browser.test.mjs
+Remove-Item Env:DINER_BROWSER_ACCESSIBILITY_ONLY
+```
+
+This focused mode does not replace the full browser suite. Set
+`DINER_BROWSER_TRACE=1` for optional progress diagnostics.
 Model tests use an injected SDK boundary/provider (no login or paid model calls).
 Edge covers offline startup, local fonts,
 configuration timeouts and retry, malformed configuration/state, obsolete
