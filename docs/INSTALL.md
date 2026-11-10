@@ -51,6 +51,7 @@ for controller leases and recovery.
 | Missing styles, fonts, or images | Confirm the app has the full repository, including `assets/`, then reopen the canvas. |
 | Start is disabled or loading fails | Read the information dialog and use **Retry loading** after addressing the reported problem. |
 | Game pauses after switching away | Return to the game and explicitly select **Resume shift**. |
+| Saving diner control timed out | Select **Resume shift** to verify the checkpoint and continue the live shift. If another view changed it, close and reopen for a fresh shift. |
 | Another view controls the game | Close the other panel or use a distinct `gameId`; do not delete active state or locks. |
 
 For an unresolved problem, use the

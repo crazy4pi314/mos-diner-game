@@ -350,6 +350,95 @@ test("late persistence failures remain explicit errors even after the control de
     assert.equal(await controller.resume(), false);
     await controller.close();
 });
+test("save timeouts pause without losing the live shift, including a committed but unacknowledged save", async t => {
+    for (const committed of [false, true]) {
+        const path = await directory(t);
+        let now = 0, timeout = false, finishSave, interruptions = 0;
+        const store = createStateStore(path, () => now), operations = [], errors = [];
+        const value = snapshot();
+        const controller = Lifecycle.createController({
+            now: () => now, hidden: () => false, snapshot: () => structuredClone(value),
+            restore: () => assert.fail("Recovery must not replace the live shift."), pause() {},
+            error: message => errors.push(message), interrupted: () => interruptions++,
+            schedule: () => 1, cancel() {},
+            transport: async body => {
+                operations.push(body?.op ?? "load");
+                if (!body) return store.load("game");
+                if (body.op === "inspect") return store.inspect("game", body.owner);
+                if (body.op === "claim") return store.claim("game", body.owner, body.revision);
+                if (timeout) {
+                    timeout = false;
+                    if (committed) await store.save("game", body.owner, body.revision, body.snapshot);
+                    await new Promise(resolve => { finishSave = resolve; });
+                    throw new DOMException("signal timed out", "TimeoutError");
+                }
+                return store.save("game", body.owner, body.revision, body.snapshot, body.op === "release");
+            },
+        });
+        await controller.resume();
+        await controller.save();
+        value.state.elapsed++;
+        timeout = true;
+        const saving = controller.save();
+        while (!finishSave) await new Promise(resolve => setImmediate(resolve));
+        value.state.elapsed++;
+        const queued = controller.save();
+        finishSave();
+        await assert.rejects(saving, { name: "TimeoutError" });
+        await queued;
+        assert.equal(controller.canAdvance(), false);
+        assert.equal(controller.canEdit(), false);
+        assert.equal(interruptions, 1);
+        assert.deepEqual(errors, []);
+        assert.equal(operations.filter(op => op === "save").length, 2, "Discard saves queued before the timeout.");
+        now = LEASE_MS + 1;
+        assert.equal(controller.canAdvance(), false, "Recovery must require explicit Resume.");
+        assert.equal(await controller.resume(), true);
+        assert.deepEqual(operations.slice(-2), ["inspect", "claim"]);
+        await controller.save();
+        assert.deepEqual((await store.load("game")).snapshot, value, "Save the current shift, not the stale timed-out snapshot.");
+        assert.deepEqual(errors, []);
+        await controller.close();
+    }
+});
+test("timeout recovery cannot accept another owner's matching checkpoint or reclaim its active lease", async t => {
+    for (const committed of [false, true]) {
+        const path = await directory(t);
+        let now = 0, timeout = false;
+        const store = createStateStore(path, () => now), errors = [];
+        const value = snapshot();
+        const controller = Lifecycle.createController({
+            now: () => now, hidden: () => false, snapshot: () => structuredClone(value),
+            restore() {}, pause() {}, error: message => errors.push(message),
+            schedule: () => 1, cancel() {},
+            transport: async body => {
+                if (!body) return store.load("game");
+                if (body.op === "inspect") return store.inspect("game", body.owner);
+                if (body.op === "claim") return store.claim("game", body.owner, body.revision);
+                if (timeout) {
+                    timeout = false;
+                    if (committed) await store.save("game", body.owner, body.revision, body.snapshot);
+                    throw new DOMException("signal timed out", "TimeoutError");
+                }
+                return store.save("game", body.owner, body.revision, body.snapshot, body.op === "release");
+            },
+        });
+        await controller.resume();
+        await controller.save();
+        value.state.elapsed++;
+        timeout = true;
+        await assert.rejects(controller.save(), { name: "TimeoutError" });
+        now = LEASE_MS + 1;
+        const other = randomUUID(), before = await store.load("game");
+        await store.claim("game", other, before.revision);
+        await assert.rejects(controller.resume(), committed ? /changed in another view/ : /controlled by another view/);
+        assert.equal(controller.canAdvance(), false);
+        assert.equal((await store.inspect("game", other)).owned, true);
+        assert.deepEqual((await store.load("game")).snapshot, before.snapshot);
+        assert.equal(errors.length, 1);
+        await controller.close();
+    }
+});
 test("controller load failure does not restore or enable play; hiding during claim releases control", async () => {
     let restored = false;
     const failed = Lifecycle.createController({
@@ -560,6 +649,14 @@ test("HTTP capabilities, origins, JSON/size limits, scoped IDs and close cleanup
     assert.equal((await fetch(url + "_diner/state", { method: "POST", headers, body: " ".repeat(Snapshot.MAX_BYTES + 5000) })).status, 413);
     assert.equal((await post({ op: "claim", owner, revision: 0 })).status, 200);
     assert.equal((await post({ op: "save", owner, revision: 0, snapshot: snapshot() })).status, 200);
+    const inspection = await (await post({ op: "inspect", owner, revision: 0 })).json();
+    assert.equal(inspection.owned, true);
+    assert.equal(inspection.revision, 1);
+    assert.deepEqual(inspection.snapshot, snapshot());
+    assert.equal((await (await post({ op: "inspect", owner: randomUUID(), revision: 1 })).json()).owned, false);
+    assert.equal((await post({ op: "inspect", owner: "invalid", revision: 1 })).status, 400);
+    assert.equal((await fetch(url + "_diner/state", { method: "POST",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ op: "inspect", owner, revision: 1 }) })).status, 403);
     const otherURL = await host.open("second", { gameId: "game" });
     const otherConfig = await (await fetch(otherURL + "_diner/config")).json();
     assert.equal((await fetch(otherURL + "_diner/state", { method: "POST",

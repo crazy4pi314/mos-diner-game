@@ -12,6 +12,7 @@
     defer = setTimeout, cancelDefer = clearTimeout, saveDelay = 400 }) {
     let revision = 0, owned = false, running = false, deadline = 0, failed = false, closed = false, generation = 0;
     let chain = Promise.resolve(), heartbeat = null, pendingSave = null, lastSaved = null, needsReclaim = false;
+    let uncertainSave = null;
     // Debounced clicks skip an identical snapshot while the 6s deadline still has slack.
     // The heartbeat always posts so a late interval cannot expire a still-valid lease.
     const leaseRefreshAt = 3000;
@@ -27,6 +28,15 @@
       heartbeat = null; pendingSave = null;
     }
     function fail(e) {
+      if (e.name === "TimeoutError" && (uncertainSave || needsReclaim)) {
+        owned = false; running = false; needsReclaim = true; generation++;
+        clearWork();
+        if (!closed) {
+          pause();
+          interrupted("Saving diner control timed out. Your shift is paused. Resume to check the save and continue.");
+        }
+        throw e;
+      }
       failed = true; running = false; clearWork();
       if (!closed) { pause(); error(e.message); }
       throw e;
@@ -54,8 +64,15 @@
     }
     async function request(op, value) {
       const sent = now();
-      const result = validateResult(await transport({ op, owner, revision, ...(value ? { snapshot: value } : {}) }));
+      let result;
+      try {
+        result = validateResult(await transport({ op, owner, revision, ...(value ? { snapshot: value } : {}) }));
+      } catch (e) {
+        if (e.name === "TimeoutError") uncertainSave = { revision, encoded: value ? JSON.stringify(value) : null };
+        throw e;
+      }
       revision = result.revision;
+      uncertainSave = null;
       deadline = sent + 6000;
       // Release and an already-owned resume write snapshots outside save().
       // A claim does not, so a pre-release cache must not skip the next save.
@@ -80,10 +97,17 @@
           if (failed || closed || hidden() || requestedGeneration !== generation) return false;
           try {
             if (needsReclaim) {
-              const current = validateResult(await transport());
+              const current = validateResult(await transport(uncertainSave ? { op: "inspect", owner, revision } : undefined));
               if (closed || hidden() || requestedGeneration !== generation) return false;
               if (current.revision !== revision) {
-                throw new Error("This game changed in another view. Close and reopen the canvas before starting a fresh shift.");
+                // A timed-out save can commit before its acknowledgement is lost.
+                // Only reconcile that exact write while this owner still holds the record.
+                if (!uncertainSave?.encoded || current.owned !== true ||
+                    current.revision !== uncertainSave.revision + 1 ||
+                    JSON.stringify(current.snapshot) !== uncertainSave.encoded) {
+                  throw new Error("This game changed in another view. Close and reopen the canvas before starting a fresh shift.");
+                }
+                revision = current.revision;
               }
             }
             if (!owned) await request("claim");

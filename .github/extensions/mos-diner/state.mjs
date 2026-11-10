@@ -104,6 +104,7 @@ export function createStateStore(directory, now = Date.now, {
             return {};
         }),
         load: id => transaction(id, data => ({ value: { busy: data.owner !== null && data.expires > now() } })),
+        inspect: (id, owner) => transaction(id, data => ({ value: { owned: data.owner === owner } })),
         claim: (id, owner, revision) => transaction(id, data => {
             if (data.owner !== null && data.expires > now() && data.owner !== owner) {
                 throw new StateError(409, "This game is controlled by another view. Pause or close that view first.");

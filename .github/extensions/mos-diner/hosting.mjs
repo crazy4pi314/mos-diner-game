@@ -27,6 +27,7 @@ export const publicFiles = new Set([
     "assets/fonts/fredoka-hebrew.woff2", "assets/fonts/Fredoka-OFL.txt",
     "assets/fonts/dm-mono-latin.woff2", "assets/fonts/dm-mono-latin-ext.woff2",
     "assets/fonts/DM-Mono-OFL.txt",
+    "assets/fonts/kalam-latin.woff2", "assets/fonts/Kalam-OFL.txt",
     "assets/diner/cash.svg", "assets/diner/coffee.svg", "assets/diner/condiments.svg",
     "assets/diner/napkins.svg", "assets/diner/plate.svg", "assets/diner/splatter.svg",
     "assets/food/burger.svg", "assets/food/eggs.svg", "assets/food/grilled-cheese.svg",
@@ -217,8 +218,10 @@ export function createDinerHost(repositoryRoot, options = {}) {
                     catch { return respond(res, 400, "Invalid JSON."); }
                     if (!body || typeof body.owner !== "string" || !/^[a-f0-9-]{36}$/.test(body.owner) ||
                         !Number.isInteger(body.revision) || body.revision < 0 ||
-                        !["claim", "save", "release"].includes(body.op)) return respond(res, 400, "Invalid state request.");
-                    if (body.op === "claim") {
+                        !["claim", "save", "release", "inspect"].includes(body.op)) return respond(res, 400, "Invalid state request.");
+                    if (body.op === "inspect") {
+                        result = await store.inspect(gameId, body.owner);
+                    } else if (body.op === "claim") {
                         result = await store.claim(gameId, body.owner, body.revision);
                         owners.add(body.owner);
                     } else {

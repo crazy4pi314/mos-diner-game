@@ -121,7 +121,7 @@
   </div>
   <footer>
     <button class="btn" data-act="restart" id="over-restart">Restart</button>
-    <button class="btn primary" data-act="summary-close" id="over-close" hidden>View certificate</button>
+    <button class="btn primary" data-act="summary-close" id="over-close" hidden>View best times</button>
   </footer>
 </dialog>
 
@@ -129,19 +129,22 @@
   <div class="cert-inner">
     <div class="certificate">
       <div class="cert-frame">
-        <img class="cert-brand" src="assets/mos-cert-logo.svg" alt="Mo's Diner" />
-        <h2 class="cert-title" id="cert-title" tabindex="-1">Gift Certificate</h2>
-        <p class="cert-body">This certifies that</p>
-        <div class="cert-user">
-          <div class="cert-name" id="cert-name">A Very Good Chef</div>
+        <div class="ticket-brand">
+          <img class="cert-brand" src="assets/mos-lockup.svg" alt="Mo's Diner" />
         </div>
+        <h2 class="cert-title" id="cert-title" tabindex="-1">Order up!</h2>
+        <p class="cert-subtitle" id="best-times-title">Session best times</p>
+        <p class="ticket-meta" id="best-times-rule">3 orders &middot; fastest first</p>
+        <table class="ticket-scores" aria-labelledby="best-times-title" aria-describedby="best-times-rule">
+          <colgroup><col class="ticket-rank" /><col /><col class="ticket-time-col" /></colgroup>
+          <thead><tr><th scope="col">#</th><th scope="col">Chef</th><th scope="col">Time</th></tr></thead>
+          <tbody id="best-times"></tbody>
+        </table>
         <p class="cert-body" id="cert-body"></p>
-        <div class="cert-good">Good for one (1) Mo's Diner mug</div>
-        <p class="cert-small">Present this certificate to any Mo's Diner staff member at the booth. No cash value. Coffee refills bottomless.</p>
-        <div class="cert-date" id="cert-date"></div>
-        <div class="cert-actions"><button class="btn" data-act="restart">Play again</button></div>
+        <p class="cert-small">This session only. Fresh slate next visit.</p>
       </div>
     </div>
+    <div class="cert-actions"><button class="btn" data-act="restart">Play again</button></div>
   </div>
 </dialog>
 

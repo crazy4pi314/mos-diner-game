@@ -11,10 +11,13 @@ GitHub trademarks, logos, or other branding.
 | Mona Sans Medium | `assets/fonts/mona-sans-medium.woff2` | [SIL Open Font License](assets/fonts/OFL.txt) |
 | Fredoka | `assets/fonts/fredoka-*.woff2` | [SIL Open Font License](assets/fonts/Fredoka-OFL.txt) |
 | DM Mono | `assets/fonts/dm-mono-*.woff2` | [SIL Open Font License](assets/fonts/DM-Mono-OFL.txt) |
+| Kalam Regular | `assets/fonts/kalam-latin.woff2` | [SIL Open Font License](assets/fonts/Kalam-OFL.txt) |
 
 Fonts are self-hosted; the game does not request external font stylesheets.
 The bundled license files contain their respective copyright notices and
 conditions, including any reserved font names.
+Kalam's Latin subset is from the [Google Fonts distribution](https://fonts.google.com/specimen/Kalam);
+it provides the handwritten names and times on the session-best kitchen ticket.
 
 ## Branding and artwork
 

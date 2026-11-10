@@ -204,11 +204,11 @@ html.cozy .board .card { border-radius: 12px; }
 html.cozy .info-dialog {
   background: var(--paper); border: var(--line); border-radius: 0; box-shadow: 0 8px 0 var(--ink-soft);
 }
-html.cozy .info-dialog::backdrop { background: rgba(74, 49, 64, .45); }
+html.cozy .info-dialog::backdrop, html.cozy .cert-overlay::backdrop { background: rgba(74, 49, 64, .45); }
+html.cozy .cert-overlay { --ticket-paper: var(--paper); }
 html.cozy .info-body .tip { background: var(--rose-xl); border: 2px dashed var(--rose-l); }
 html.cozy .name-field input { background: var(--cream-2); border: var(--line); }
 html.cozy .toast { background: var(--ink); color: var(--paper); border-radius: 14px; box-shadow: var(--pop); }
-html.cozy .cert-overlay { background: radial-gradient(circle at 50% 20%, rgba(223,135,151,.75), rgba(74,49,64,.92) 70%); }
 
 @media (max-width: 760px) {
   html.cozy .sidebar, html.cozy .rail { background: var(--cream-2); }
