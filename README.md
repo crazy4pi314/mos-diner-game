@@ -51,8 +51,9 @@ appear.
    order. When checks are green, select **Merge & serve**.
 
 A wrong order comes back with the mismatched step highlighted. Fix the plan
-and try again. Finish the shift to earn an in-game gift certificate; any
-event redemption is up to the event organizers.
+and try again. Finish the shift to add your time to a tear-off kitchen ticket
+showing this session's three fastest shifts. Play again to beat your best.
+Closing or refreshing the canvas clears the board; there are no redeemable prizes.
 
 ![Mo's Diner canvas showing three customer orders and an editable Copilot plan with you asked and assumed recipe details](docs/images/plan-review.png)
 

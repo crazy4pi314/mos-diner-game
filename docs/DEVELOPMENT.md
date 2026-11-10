@@ -76,7 +76,7 @@ use 1-64 lowercase ASCII letters, digits, hyphens or underscores. Unknown fields
 always use the local deterministic parser.
 The canvas switches to tabs at 900px.
 CSS and game navigation use the same media query, including when the panel resizes.
-Short panels scroll game content and dialog bodies; the certificate scrolls to its replay button.
+Short panels scroll game content and dialog bodies; the best-times ticket scrolls to its replay button.
 
 Keyboard focus stays with the same Orders or Kitchen action when background
 updates redraw it, with a nearby fallback when that action disappears. Compact
@@ -84,15 +84,29 @@ navigation exposes the current view and describes its order counts. Plan choices
 use one Tab stop per radio group; arrow keys and Home/End select a version without
 approving the plan.
 
-Winning shows the shift summary before opening the certificate as a native modal
+Winning shows the shift summary before opening the best-times ticket as a native modal
 dialog. Its title receives focus, background controls are inert, and replay
-returns to the welcome/name field with the clock stopped. Certificate content
+returns to the welcome/name field with the clock stopped. Ticket content
 reflows and scrolls rather than scaling text and controls down to fit.
+The tear-off kitchen slip lists the three fastest successful shifts in the current
+document, including chef names and active elapsed time (not time remaining or wall
+time). Equal times retain completion order. Unfilled rows show placeholders, not
+sample scores. Each win is recorded once; replay and Reset game retain the board.
+Scores live only in memory, separate from controller checkpoints: refreshing or
+closing the canvas clears them, and separate canvases do not share scores.
+The current shift is highlighted if it ranks, and a strictly faster record gets
+**New best**. The latest shift's time is shown even when it misses the top three.
+There is no prize or redemption language.
 The prompt field has an inset-safe keyboard-focus outline using the theme's text
-color. Certificate copy uses dark rose on light pink (5.77:1); the replay button
-uses white on brand pink (4.63:1), or white on dark rose on hover (9.46:1), with a
-two-color keyboard-focus ring. Certificate artwork is constrained to its content
-width, copy wraps, and the replay button has a minimum layout height of 44px.
+color. Ticket colors, paper, and replay styling use the same theme tokens and
+button rules as the welcome dialog. Its transparent fullscreen container and
+matching translucent modal backdrop keep the game visible behind it.
+Copy wraps, and the replay button has a minimum layout
+height of 44px. Handwritten names and times use self-hosted Kalam Regular's Latin
+subset from Google Fonts, with `Kalam-OFL.txt` alongside it.
+The ticket and welcome dialog use the original `mos-lockup.svg` artwork;
+the title bar retains the original `mos-mark.svg` mask. The ticket shares
+the canvas's active theme colors and body typeface.
 Reduced-motion styles also disable the cooking-step spinner and running-check
 blink, preserving their static status icons and labels.
 
@@ -153,7 +167,7 @@ instances sharing a `gameId` still compete for the same exclusive controller.
 Canvas shifts load **paused**. Only **Start shift / Resume shift** (or Enter in the
 name field) acquires control and starts the clocks. Start remains disabled until initialization and canvas visibility are
 ready. Visibility tracking observes the active welcome/results dialog or
-certificate when present, rather than the page obscured by its modal backdrop.
+best-times ticket when present, rather than the page obscured by its modal backdrop.
 Hiding the canvas still pauses it; showing it enables explicit resume without
 starting the clock automatically.
 Opening the info dialog pauses
@@ -192,6 +206,15 @@ Resume rereads the current revision and atomically reclaims control only if it
 has not changed and another view does not own it. It never advances offline time
 or automatically resumes. A changed revision or competing owner blocks play
 with an explicit error; close and reopen to start a fresh shift.
+An active control request that reaches its five-second timeout also pauses the
+live shift, but does not permanently disable Resume. Explicit resume checks the
+checkpoint using the same capability- and origin-protected state endpoint. If
+the timed-out save committed before its response was lost, recovery accepts only
+the exact attempted snapshot at the next revision, still recorded under this
+controller's owner ID. A competing owner or any other revision change remains
+an error. No saved snapshot replaces the live shift, and no offline time advances.
+Disk errors and corrupt state still block play rather than being treated as
+transient timeouts.
 Pause saves and releases valid control and stops the heartbeat; close/shutdown
 releases ownership. If a
 renderer dies without a close event, the lease expires without charging offline
@@ -242,7 +265,7 @@ The browser test launches an isolated headless **Microsoft Edge** profile and
 removes it afterward. It skips when Edge is not installed; set `DINER_EDGE` to
 the executable path to enable it elsewhere.
 To run only the focused keyboard, modal, compact-navigation, reduced-motion,
-contrast, and certificate-reflow regressions:
+contrast, best-times ranking, and ticket-reflow regressions:
 
 ```powershell
 $env:DINER_BROWSER_ACCESSIBILITY_ONLY='1'; node --test --test-timeout=180000 .github\extensions\mos-diner\browser.test.mjs
@@ -251,6 +274,22 @@ Remove-Item Env:DINER_BROWSER_ACCESSIBILITY_ONLY
 
 This focused mode does not replace the full browser suite. Set
 `DINER_BROWSER_TRACE=1` for optional progress diagnostics.
+For just the session-best kitchen ticket (ranking, ties, replay, plain-text names,
+refresh/isolation, narrow-canvas layout, and direct-file regression):
+
+```powershell
+$env:DINER_BROWSER_TICKET_ONLY='1'; node --test --test-timeout=240000 .github\extensions\mos-diner\browser.test.mjs
+Remove-Item Env:DINER_BROWSER_TICKET_ONLY
+```
+
+For the save-timeout recovery regression, including responses lost after a
+successful write:
+
+```powershell
+$env:DINER_BROWSER_RECOVERY_ONLY='1'; node --test --test-timeout=240000 .github\extensions\mos-diner\browser.test.mjs
+Remove-Item Env:DINER_BROWSER_RECOVERY_ONLY
+```
+
 Model tests use an injected SDK boundary/provider (no login or paid model calls).
 Edge covers offline startup, local fonts,
 configuration timeouts and retry, malformed configuration/state, obsolete
@@ -261,8 +300,8 @@ changed revisions, delayed acknowledgements, and queued stale saves.
 Headless Edge does not prove native Windows webview suspension behavior.
 Verify that behavior in the target host when changing lifecycle handling.
 
-Fulfill three orders exactly as requested within 90 seconds to earn an in-game
-gift certificate. Any event redemption is up to the event organizers.
+Fulfill three orders exactly as requested within 90 seconds to add your completion
+time to this session's best-times kitchen ticket.
 
 ## How to play
 
@@ -278,7 +317,7 @@ If time runs out before you fulfill three orders, restart and try again with a n
 
 ## Files
 
-- `index.html`: markup (three-column shell, dialogs, certificate)
+- `index.html`: markup (three-column shell, dialogs, best-times ticket)
 - `styles.css`: Copilot app styles plus game UI
 - `menu.json`: categorized dishes, three recipe options per dish, shared sauces, customer phrases, and cooking/check data. `art: null` uses the dish emoji instead of unrelated artwork.
 - `orders.js`: menu validation and compilation (`Menu.MENU`), including expansion of shared sauces into optional recipe steps.
@@ -291,8 +330,8 @@ If time runs out before you fulfill three orders, restart and try again with a n
 - `assets/copilot-chef.png`: Copilot mascot
 - `assets/mos-mark.svg`: pink script mark. The title bar masks it white.
 - `assets/mos-lockup.svg`: color Mo's Diner lockup for the welcome dialog.
-- `assets/mos-badge.svg`: pink-background badge the gift certificate expands.
-- `assets/mos-cert-logo.svg`: badge crop (script, outlined DINER, checker, SF*CA bubble) used on the certificate.
+- `assets/mos-badge.svg`: legacy pink-background event badge.
+- `assets/mos-cert-logo.svg`: legacy event badge crop (script, outlined DINER, checker, SF*CA bubble); not used on the best-times ticket.
 - `assets/invertocat-pink.svg`: current [official GitHub Invertocat](https://brand.github.com/foundations/logo) in dark pink (`#D5346B`), used as the page favicon. The Copilot canvas tab icon is app-owned and cannot be changed from this repo.
 - `assets/checker-icon.svg`: dark and light pink checker pattern.
 - `theme-hub.css`: Orders / Prep / Kitchen navigation in the diner design.

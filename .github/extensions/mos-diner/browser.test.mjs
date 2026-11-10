@@ -50,8 +50,12 @@ async function connect(url, runtime = true) {
     };
 }
 const accessibilityOnly = process.env.DINER_BROWSER_ACCESSIBILITY_ONLY === "1";
-test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion and reflow"
-    : "Edge: offline startup, retry, lifecycle and deterministic play", { timeout: 180000 }, async t => {
+const ticketOnly = process.env.DINER_BROWSER_TICKET_ONLY === "1";
+const recoveryOnly = process.env.DINER_BROWSER_RECOVERY_ONLY === "1";
+test(recoveryOnly ? "Edge: save timeout recovery preserves the live shift"
+    : ticketOnly ? "Edge: kitchen ticket and session best times"
+    : accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion and reflow"
+    : "Edge: offline startup, retry, lifecycle and deterministic play", { timeout: 240000 }, async t => {
     try {
     const candidates = [process.env.DINER_EDGE, process.env["ProgramFiles(x86)"] && join(process.env["ProgramFiles(x86)"], "Microsoft", "Edge", "Application", "msedge.exe"),
         process.env.ProgramFiles && join(process.env.ProgramFiles, "Microsoft", "Edge", "Application", "msedge.exe")].filter(Boolean);
@@ -150,7 +154,70 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
         await connection.send("Input.dispatchKeyEvent", { type: "keyDown", key: value, modifiers });
         await connection.send("Input.dispatchKeyEvent", { type: "keyUp", key: value, modifiers });
     }
-    if (!accessibilityOnly) {
+    if (recoveryOnly || (!accessibilityOnly && !ticketOnly)) {
+        for (const committed of [false, true]) {
+            const id = `save-timeout-${committed}`;
+            const recovering = await page(await host.open(id, { gameId: id }), {
+                before: `
+                  window.__timeoutSave = false;
+                  const originalFetch = window.fetch.bind(window);
+                  window.fetch = async (path, options) => {
+                    if (path === "/_diner/state" && options?.body &&
+                        JSON.parse(options.body).op === "save" && window.__recordRecovery) {
+                      window.__recordRecovery = false;
+                      window.__recoverySnapshot = JSON.parse(options.body).snapshot;
+                    }
+                    if (path === "/_diner/state" && options?.body &&
+                        JSON.parse(options.body).op === "save" && window.__timeoutSave) {
+                      window.__timeoutSave = false;
+                      if (${committed}) await originalFetch(path, options);
+                      return new Promise((resolve, reject) => {
+                        if (options.signal.aborted) reject(options.signal.reason);
+                        else options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true });
+                      });
+                    }
+                    return originalFetch(path, options);
+                  };
+                `,
+            });
+            await resume(recovering);
+            await recovering.evaluate(`(() => {
+              const o = __mo.active();
+              __mo.sendPrompt(o, Copilot.promptText(o.want.dish, o.want.opts));
+              __mo.approve(o); __mo.renderAll();
+              window.__timeoutSave = true;
+              document.body.dispatchEvent(new Event("click", { bubbles: true }));
+            })()`);
+            await until(() => recovering.evaluate('document.querySelector("#info-dialog").open && /timed out/.test(document.querySelector("#lifecycle-message").textContent)'),
+                "A save timeout must pause with a recoverable explanation.");
+            const paused = await recovering.evaluate("__mo.snapshot()");
+            assert.equal(await recovering.evaluate("__mo.S.timer"), null);
+            await until(() => recovering.evaluate('!document.querySelector("#start-shift").disabled'),
+                "A save timeout must leave Resume available.");
+            await wait(1100);
+            assert.deepEqual(await recovering.evaluate("__mo.snapshot()"), paused, "Never advance offline time while recovering.");
+            assert.deepEqual(await recovering.evaluate(`(async () => {
+              window.__recordRecovery = true;
+              await document.querySelector("#start-shift").onclick();
+              return {
+                running: __mo.S.timer !== null,
+                dialogOpen: document.querySelector("#info-dialog").open,
+                snapshot: window.__recoverySnapshot
+              };
+            })()`), { running: true, dialogOpen: false, snapshot: paused },
+                "The first resumed save must keep the live shift; active clocks may advance while its response arrives.");
+            assert.equal(await recovering.evaluate(`(() => {
+              const elapsed = __mo.S.elapsed; __mo.tick(); return __mo.S.elapsed === elapsed + 1;
+            })()`), true, "Gameplay must continue after recovery.");
+            assert.deepEqual(recovering.errors, []);
+            await recovering.evaluate("__mo.pause()");
+            await host.close(id);
+            await recovering.closePage();
+        }
+        trace("save timeout recovery before/after commit passed");
+        if (recoveryOnly) return;
+    }
+    if (!accessibilityOnly && !ticketOnly) {
     for (const skin of ["default", "cozy"]) {
         for (const view of ["hub", "classic"]) {
             const id = `offline-${skin}-${view}`;
@@ -269,7 +336,9 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     await interrupted.closePage();
     }
 
-    const first = await page(url);
+    let first, second;
+    if (!ticketOnly) {
+    first = await page(url);
     assert.match(await first.evaluate("navigator.userAgent"), /Edg/);
     assert.deepEqual(await first.evaluate(`(async () => {
       const header = document.querySelector(".navbar-brand .brand-mark");
@@ -285,7 +354,7 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
         welcomeRendered: welcome.naturalWidth > 0,
         certSrc: cert.getAttribute("src"),
         certRendered: cert.naturalWidth > 0,
-        certPink: getComputedStyle(document.querySelector(".certificate")).backgroundColor,
+        ticketPaper: getComputedStyle(document.querySelector(".certificate")).backgroundColor,
         icon: icon.getAttribute("href"),
         markSized: box.width > 40 && box.height > 16,
         markMask: getComputedStyle(header).maskImage.includes("mos-mark.svg"),
@@ -294,7 +363,7 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     })()`), {
         headerLabel: "Mo's Diner", welcomeAlt: "Mo's Diner",
         welcomeSrc: "assets/mos-lockup.svg", welcomeRendered: true,
-        certSrc: "assets/mos-cert-logo.svg", certRendered: true, certPink: "rgb(238, 188, 215)",
+        certSrc: "assets/mos-lockup.svg", certRendered: true, ticketPaper: "rgb(255, 255, 255)",
         icon: "assets/invertocat-pink.svg", markSized: true, markMask: true, lowercaseBrand: false,
     });
     await resume(first);
@@ -479,7 +548,7 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     await host.close("edge");
     await first.closePage();
     const reopened = await host.open("fresh", { gameId: "browser" });
-    const second = await page(reopened);
+    second = await page(reopened);
     assert.equal(await second.evaluate("__mo.S.phase"), "welcome");
     assert.equal(await second.evaluate("__mo.S.elapsed"), 0);
     assert.equal(await second.evaluate("__mo.S.orders.length"), 0);
@@ -545,7 +614,7 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     })()`);
     assert.equal(await second.evaluate("__mo.S.served"), 3);
     assert.equal(await second.evaluate('document.querySelector("#cert").open'), false,
-        "The summary must be read before opening the certificate.");
+        "The summary must be read before opening the best-times ticket.");
     assert.equal(await second.evaluate('document.querySelector("#over-dialog").open'), true);
     assert.equal(await second.evaluate('document.activeElement.id'), "over-title");
     assert.equal(await second.evaluate('document.querySelector("#over-title").textContent'), "Shift complete!");
@@ -554,7 +623,13 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     assert.equal(await second.evaluate('document.querySelector("#over-close").hidden'), false);
     await second.evaluate('document.querySelector("#over-close").click()');
     assert.equal(await second.evaluate('document.querySelector("#over-dialog").open'), false);
-    assert.match(await second.evaluate('document.querySelector("#cert-body").textContent'), /fulfilled 3 orders in/);
+    assert.match(await second.evaluate('document.querySelector("#cert-body").textContent'), /Your shift: \d+:\d{2} · 3\/3 served/);
+    assert.doesNotMatch(await second.evaluate('document.querySelector("#cert").textContent'), /mug|redeem|gift certificate|booth/i);
+    assert.equal(await second.evaluate(`(async () => {
+      await document.fonts.load('400 25px "Kalam"');
+      return document.fonts.check('400 25px "Kalam"') &&
+        performance.getEntriesByType("resource").some(r => r.name.includes("/fonts/kalam-latin.woff2"));
+    })()`), true, "The handwritten font must load locally with external requests blocked.");
     assert.deepEqual(await second.evaluate(`(() => {
       const dialog = document.querySelector("#cert");
       const initialFocus = document.activeElement.id;
@@ -565,7 +640,7 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     for (const modifiers of [0, 0, 8, 8]) {
         await key(second, "Tab", modifiers);
         assert.equal(await second.evaluate('document.querySelector("#cert").contains(document.activeElement)'), true,
-            "Tab and Shift+Tab must stay within the certificate.");
+            "Tab and Shift+Tab must stay within the best-times ticket.");
     }
     await key(second, "Escape");
     assert.equal(await second.evaluate('document.querySelector("#cert").open'), true);
@@ -579,16 +654,18 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
         const a = luminance(foreground), b = luminance(background);
         return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
       };
-      const certificate = getComputedStyle(document.querySelector(".certificate"));
-      const selectors = [".cert-body", ".cert-small", ".cert-date", ".cert-good", ".cert-actions .btn"];
+      const paper = getComputedStyle(document.querySelector(".certificate")).backgroundColor;
+      const selectors = [".cert-title", ".cert-subtitle", ".ticket-meta", ".ticket-chef", ".ticket-time",
+        ".ticket-best", ".ticket-empty", ".cert-body", ".cert-small", ".cert-actions .btn"];
       return selectors.every(selector => {
-        const style = getComputedStyle(document.querySelector(selector));
-        const background = style.backgroundColor === "rgba(0, 0, 0, 0)" ? certificate.backgroundColor : style.backgroundColor;
+        const element = document.querySelector(selector), style = getComputedStyle(element);
+        const background = style.backgroundColor !== "rgba(0, 0, 0, 0)" ? style.backgroundColor
+          : element.closest("tr.current") ? getComputedStyle(element.closest("tr")).backgroundColor : paper;
         return contrast(style.color, background) >= 4.5;
       });
-    })()`), true, "Certificate text, reward and focused replay must meet normal-text contrast.");
+    })()`), true, "Ticket text and replay must meet normal-text contrast.");
     await second.evaluate(`(() => {
-      document.querySelector("#cert-name").textContent = "ExtraordinarilyLongChefUsername";
+      document.querySelector(".ticket-chef").textContent = "ExtraordinarilyLongChefUsername";
     })()`);
     await second.send("Emulation.setDeviceMetricsOverride", { width: 320, height: 320, deviceScaleFactor: 1, mobile: true });
     const certificateBounds = await second.evaluate(`(async () => {
@@ -608,19 +685,19 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     assert.ok(certificateBounds.left >= 0 && certificateBounds.right <= certificateBounds.width &&
       certificateBounds.transform === "none" && !certificateBounds.overflow && certificateBounds.replayVisible &&
       certificateBounds.replayHeight >= 44 && certificateBounds.copySize >= 14,
-      `certificate should reflow and scroll without shrinking at 320x320: ${JSON.stringify(certificateBounds)}`);
+      `ticket should reflow and scroll without shrinking at 320x320: ${JSON.stringify(certificateBounds)}`);
     await second.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
     await second.evaluate('window.dispatchEvent(new Event("resize"))');
     assert.equal(await second.evaluate('document.querySelector("#cert").classList.contains("show")'), true);
     await until(() => second.evaluate('!document.querySelector("#start-shift").disabled'),
-        "Certificate visibility must settle before replay.");
+        "Ticket visibility must settle before replay.");
     await second.evaluate('document.querySelector(\'#cert [data-act="restart"]\').click()');
-    await until(() => second.evaluate('__mo.S.phase === "welcome"'), "Certificate replay did not return to welcome.");
+    await until(() => second.evaluate('__mo.S.phase === "welcome"'), "Ticket replay did not return to welcome.");
     assert.deepEqual(await second.evaluate(`({ certificate: document.querySelector("#cert").open,
       summary: document.querySelector("#over-dialog").open, welcome: document.querySelector("#info-dialog").open,
       focus: document.activeElement.id, timer: __mo.S.timer, orders: __mo.S.orders.length })`),
         { certificate: false, summary: false, welcome: true, focus: "chef-name", timer: null, orders: 0 });
-    trace("certificate modal, contrast, reflow and replay checks passed");
+    trace("ticket modal, contrast, reflow and replay checks passed");
     await resume(second);
     await second.evaluate(`(() => {
       const a = __mo;
@@ -640,6 +717,127 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
     assert.equal(await second.evaluate('document.querySelectorAll("#over-orders li").length'), 3);
     await host.close("fresh");
     await second.closePage();
+    }
+
+    const scoresURL = await host.open("scores", { gameId: "scores", skin: "cozy" });
+    const scores = await page(scoresURL);
+    const readScores = () => scores.evaluate(`Array.from(document.querySelectorAll("#best-times tr"), row => ({
+      chef: row.querySelector(".ticket-chef").textContent,
+      time: row.querySelector(".ticket-clock")?.textContent ?? null,
+      current: row.getAttribute("aria-current") === "true",
+      best: !!row.querySelector(".ticket-best")
+    }))`);
+    async function scoreShift(chef, elapsed) {
+        if (await scores.evaluate('__mo.S.phase !== "welcome"')) {
+            await scores.evaluate("__mo.restart()");
+            await scores.evaluate(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+            await wait(200);
+        }
+        await scores.evaluate(`document.querySelector("#chef-name").value = ${JSON.stringify(chef)}`);
+        await resume(scores);
+        await scores.evaluate(`__mo.S.elapsed = ${elapsed}; __mo.fleetAll(); document.querySelector("#over-close").click()`);
+        return readScores();
+    }
+    assert.deepEqual(await scoreShift("Sunny", 42), [
+        { chef: "Sunny", time: "0:42", current: true, best: true },
+        { chef: "Your next shift", time: null, current: false, best: false },
+        { chef: "Your next shift", time: null, current: false, best: false },
+    ]);
+    await scores.evaluate('document.querySelector("#cert").close(); document.querySelector("#over-close").click()');
+    assert.equal((await readScores()).filter(row => row.time !== null).length, 1,
+        "Reopening the same winning ticket must not record it twice.");
+    await scoreShift("Mo", 51);
+    await scoreShift("Pip", 63);
+    assert.equal(await scores.evaluate(`(async () => {
+      await document.fonts.ready;
+      return document.fonts.check('400 25px "Kalam"') &&
+        document.querySelector(".cert-brand").getAttribute("src") === "assets/mos-lockup.svg";
+    })()`), true, "Use the real logo and the local handwriting font.");
+    assert.deepEqual(await scores.evaluate(`(() => {
+      const ticket = document.querySelector("#cert"), welcome = document.querySelector("#info-dialog");
+      const replay = getComputedStyle(ticket.querySelector("button")), start = getComputedStyle(document.querySelector("#start-shift"));
+      const properties = ["backgroundColor", "color", "borderRadius", "borderWidth", "boxShadow", "fontFamily", "fontSize", "fontWeight", "padding"];
+      return {
+        transparent: getComputedStyle(ticket).backgroundColor === "rgba(0, 0, 0, 0)",
+        backdrop: getComputedStyle(ticket, "::backdrop").backgroundColor === getComputedStyle(welcome, "::backdrop").backgroundColor,
+        surface: getComputedStyle(document.querySelector(".certificate")).backgroundColor === getComputedStyle(welcome).backgroundColor,
+        button: properties.every(property => replay[property] === start[property])
+      };
+    })()`), { transparent: true, backdrop: true, surface: true, button: true },
+    "Ticket must share the opening splash backdrop, surface and button styles.");
+    if (process.env.DINER_TICKET_SCREENSHOT) {
+        await scores.send("Emulation.setDeviceMetricsOverride", { width: 900, height: 900, deviceScaleFactor: 1, mobile: false });
+        await scores.evaluate(`Promise.all(document.querySelector("#cert").getAnimations({ subtree: true }).map(a => a.finished))`);
+        const screenshot = await scores.send("Page.captureScreenshot", { format: "png" });
+        await writeFile(process.env.DINER_TICKET_SCREENSHOT, Buffer.from(screenshot.data, "base64"));
+    }
+    assert.deepEqual((await scoreShift("Tie", 42)).map(row => [row.chef, row.time]), [
+        ["Sunny", "0:42"], ["Tie", "0:42"], ["Mo", "0:51"],
+    ], "Keep only three times, with earlier completions first on ties.");
+    assert.equal(await scores.evaluate('!!document.querySelector(".ticket-best")'), false,
+        "A tied time is not a new best.");
+    const markupName = '<img src=x onerror="alert(1)">';
+    assert.deepEqual((await scoreShift(markupName, 38))[0],
+        { chef: markupName, time: "0:38", current: true, best: true });
+    assert.equal(await scores.evaluate('document.querySelectorAll("#best-times img").length'), 0,
+        "Chef names must stay plain text.");
+    const topThree = await readScores();
+    assert.deepEqual((await scoreShift("Slow", 74)).map(row => [row.chef, row.time]),
+        topThree.map(row => [row.chef, row.time]), "A slower fourth score must not displace a best time.");
+    assert.equal(await scores.evaluate('!!document.querySelector("#best-times .current")'), false);
+    assert.equal(await scores.evaluate('document.querySelector("#cert-body").textContent'), "Your shift: 1:14 · 3/3 served");
+    await scores.send("Emulation.setDeviceMetricsOverride", { width: 320, height: 320, deviceScaleFactor: 1, mobile: true });
+    const narrowTicket = await scores.evaluate(`(async () => {
+      await document.fonts.ready;
+      await Promise.all(document.querySelector("#cert").getAnimations({ subtree: true }).map(a => a.finished));
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const dialog = document.querySelector("#cert"), button = dialog.querySelector("button");
+      button.focus(); button.scrollIntoView({ block: "end", behavior: "instant" });
+      const rect = button.getBoundingClientRect();
+      return { scrollWidth: dialog.scrollWidth, clientWidth: dialog.clientWidth,
+        top: rect.top, bottom: rect.bottom, height: rect.height, viewport: innerHeight };
+    })()`);
+    assert.ok(narrowTicket.scrollWidth <= narrowTicket.clientWidth && narrowTicket.top >= 0 &&
+        narrowTicket.bottom <= narrowTicket.viewport && narrowTicket.height >= 44,
+        `Long names must wrap and replay must remain reachable: ${JSON.stringify(narrowTicket)}`);
+    await key(scores, "Tab");
+    assert.equal(await scores.evaluate('document.querySelector("#cert").contains(document.activeElement)'), true);
+    await key(scores, "Escape");
+    assert.equal(await scores.evaluate('document.querySelector("#cert").matches(":modal")'), true);
+    await scores.send("Emulation.setDeviceMetricsOverride", { width: 900, height: 900, deviceScaleFactor: 1, mobile: false });
+    await scores.evaluate("__mo.restart()");
+    await resume(scores);
+    await scores.evaluate('__mo.S.elapsed = 3; __mo.S.left = 1; __mo.tick()');
+    assert.equal(await scores.evaluate("__mo.S.phase"), "over");
+    assert.deepEqual((await scoreShift("After timeout", 60)).map(row => [row.chef, row.time]),
+        topThree.map(row => [row.chef, row.time]), "Incomplete shifts must not enter the board.");
+    await scores.send("Page.reload");
+    await until(() => scores.evaluate('!!window.__mo && __mo.S.phase === "welcome" && !document.querySelector("#start-shift").disabled'),
+        "The refreshed canvas did not initialize.");
+    assert.deepEqual((await scoreShift("Fresh", 50)).map(row => [row.chef, row.time]), [
+        ["Fresh", "0:50"], ["Your next shift", null], ["Your next shift", null],
+    ], "Refreshing starts a new session board.");
+    const independent = await page(await host.open("independent", { gameId: "independent" }));
+    await resume(independent);
+    await independent.evaluate('__mo.S.elapsed = 55; __mo.fleetAll(); document.querySelector("#over-close").click()');
+    assert.equal(await independent.evaluate('document.querySelectorAll("#best-times .ticket-clock").length'), 1,
+        "Separate canvases must not share best times.");
+    assert.equal(scores.errors.length + independent.errors.length, 0);
+    await host.close("independent");
+    await independent.closePage();
+    await host.close("scores");
+    await scores.closePage();
+    trace("session best times: ranking, ties, replay, timeout, escaping and isolation passed");
+    if (ticketOnly) {
+        const direct = await page(pathToFileURL(join(root, "index.html")).href);
+        await resume(direct);
+        await direct.evaluate('__mo.S.elapsed = 45; __mo.fleetAll(); document.querySelector("#over-close").click()');
+        assert.equal(await direct.evaluate('document.querySelector(".ticket-clock").textContent'), "0:45");
+        assert.doesNotMatch(await direct.evaluate('document.querySelector("#cert").textContent'), /mug|redeem|gift certificate|booth/i);
+        assert.equal(direct.errors.length, 0);
+        await direct.closePage();
+        return;
+    }
 
     let wrapper, classic;
     if (!accessibilityOnly) {

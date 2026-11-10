@@ -63,8 +63,10 @@
   // Order status: line → ordering (you're talking to them; prompt, then plan) → cooking → ready → served.
   // Customers stay in line until they're served, and you can take anyone's order in any order.
   // A wrong order comes back as "returned" until you fix the plan and Copilot rebuilds it.
-  let S = null;
+  const sessionScores = [];
+  let S = null, shiftScore = null;
   function newShift() {
+    shiftScore = null;
     const dishes = shuffle(MENU).slice(0, TOTAL);
     const people = shuffle(CUSTOMERS);
     S = {
@@ -526,6 +528,11 @@
 
   function win() {
     S.phase = "won";
+    shiftScore = { chef: S.chef || "A Very Good Chef", elapsed: S.elapsed,
+      best: !sessionScores.length || S.elapsed < sessionScores[0].elapsed };
+    sessionScores.push(shiftScore);
+    sessionScores.sort((a, b) => a.elapsed - b.elapsed);
+    sessionScores.length = Math.min(3, sessionScores.length);
     settleTips();
     stopTimer();
     showShiftSummary(true);
@@ -941,9 +948,15 @@
   // ---------- Celebrations ----------
   function showCert() {
     if (S.phase !== "won" || certEl.open) return;
-    $("#cert-name").textContent = S.chef || "A Very Good Chef";
-    $("#cert-body").innerHTML = `fulfilled ${GOAL} orders in <b>${mmss(S.elapsed)}</b>.`;
-    $("#cert-date").textContent = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    $("#best-times").innerHTML = Array.from({ length: 3 }, (_, i) => {
+      const score = sessionScores[i], current = score === shiftScore;
+      return `<tr${current ? ' class="current" aria-current="true"' : ""}>
+        <th scope="row">${i + 1}</th>
+        <td class="ticket-chef">${score ? esc(score.chef) : '<span class="ticket-empty">Your next shift</span>'}</td>
+        <td class="ticket-time">${score ? `<span class="ticket-clock${i === 0 ? " fastest" : ""}">${mmss(score.elapsed)}</span>${current && score.best ? '<small class="ticket-best">New best</small>' : ""}` : '<span aria-label="No time yet">&mdash;</span>'}</td>
+      </tr>`;
+    }).join("");
+    $("#cert-body").textContent = `Your shift: ${mmss(S.elapsed)} · ${S.served}/${GOAL} served`;
     certEl.classList.add("show");
     certEl.showModal();
     $("#cert-title").focus();
