@@ -1,4 +1,4 @@
-![Mo's Diner: the pink script wordmark and outlined diner lettering from GitHub Universe](assets/mos-lockup.svg)
+<img src="assets/mos-lockup.svg" alt="Mo's Diner: the pink script wordmark and outlined diner lettering from GitHub Universe" width="194">
 
 # Good prompts. Green checks. Breakfast served.
 
