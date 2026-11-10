@@ -735,7 +735,7 @@ test(recoveryOnly ? "Edge: save timeout recovery preserves the live shift"
         }
         await scores.evaluate(`document.querySelector("#chef-name").value = ${JSON.stringify(chef)}`);
         await resume(scores);
-        await scores.evaluate(`__mo.S.elapsed = ${elapsed}; __mo.fleetAll(); document.querySelector("#over-close").click()`);
+        await scores.evaluate(`__mo.S.elapsed = ${elapsed}; __mo.S.left = 90 - ${elapsed}; __mo.fleetAll(); document.querySelector("#over-close").click()`);
         return readScores();
     }
     assert.deepEqual(await scoreShift("Sunny", 42), [
@@ -768,6 +768,8 @@ test(recoveryOnly ? "Edge: save timeout recovery preserves the live shift"
     if (process.env.DINER_TICKET_SCREENSHOT) {
         await scores.send("Emulation.setDeviceMetricsOverride", { width: 900, height: 900, deviceScaleFactor: 1, mobile: false });
         await scores.evaluate(`Promise.all(document.querySelector("#cert").getAnimations({ subtree: true }).map(a => a.finished))`);
+        await until(() => scores.evaluate('!document.querySelector("#toast").classList.contains("show")'),
+            "The opening toast must clear before capturing the final screen.");
         const screenshot = await scores.send("Page.captureScreenshot", { format: "png" });
         await writeFile(process.env.DINER_TICKET_SCREENSHOT, Buffer.from(screenshot.data, "base64"));
     }
@@ -806,6 +808,8 @@ test(recoveryOnly ? "Edge: save timeout recovery preserves the live shift"
     assert.equal(await scores.evaluate('document.querySelector("#cert").matches(":modal")'), true);
     await scores.send("Emulation.setDeviceMetricsOverride", { width: 900, height: 900, deviceScaleFactor: 1, mobile: false });
     await scores.evaluate("__mo.restart()");
+    await scores.evaluate(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+    await wait(200);
     await resume(scores);
     await scores.evaluate('__mo.S.elapsed = 3; __mo.S.left = 1; __mo.tick()');
     assert.equal(await scores.evaluate("__mo.S.phase"), "over");
