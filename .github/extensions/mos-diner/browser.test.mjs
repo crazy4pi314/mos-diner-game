@@ -591,9 +591,12 @@ test(accessibilityOnly ? "Edge: accessibility focus, modal, navigation, motion a
       document.querySelector("#cert-name").textContent = "ExtraordinarilyLongChefUsername";
     })()`);
     await second.send("Emulation.setDeviceMetricsOverride", { width: 320, height: 320, deviceScaleFactor: 1, mobile: true });
-    const certificateBounds = await second.evaluate(`(() => {
+    const certificateBounds = await second.evaluate(`(async () => {
       window.dispatchEvent(new Event("resize"));
       const dialog = document.querySelector("#cert"), inner = dialog.querySelector(".cert-inner");
+      await document.fonts.ready;
+      await Promise.all(dialog.getAnimations({ subtree: true }).map(animation => animation.finished));
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const rect = inner.getBoundingClientRect(), button = inner.querySelector("button");
       button.focus(); button.scrollIntoView({ block: "end", behavior: "instant" });
       const replay = button.getBoundingClientRect();

@@ -241,6 +241,16 @@ node --test --test-timeout=240000 .github\extensions\mos-diner\browser.test.mjs
 The browser test launches an isolated headless **Microsoft Edge** profile and
 removes it afterward. It skips when Edge is not installed; set `DINER_EDGE` to
 the executable path to enable it elsewhere.
+To run only the focused keyboard, modal, compact-navigation, reduced-motion,
+contrast, and certificate-reflow regressions:
+
+```powershell
+$env:DINER_BROWSER_ACCESSIBILITY_ONLY='1'; node --test --test-timeout=180000 .github\extensions\mos-diner\browser.test.mjs
+Remove-Item Env:DINER_BROWSER_ACCESSIBILITY_ONLY
+```
+
+This focused mode does not replace the full browser suite. Set
+`DINER_BROWSER_TRACE=1` for optional progress diagnostics.
 Model tests use an injected SDK boundary/provider (no login or paid model calls).
 Edge covers offline startup, local fonts,
 configuration timeouts and retry, malformed configuration/state, obsolete
