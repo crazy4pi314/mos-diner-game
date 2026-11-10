@@ -210,6 +210,9 @@ html:not(.hub) .hub-only { display: none !important; }
 .ck.running .ck-ic { color: #bf8700; animation: ck-blink 1s ease-in-out infinite; }
 .ck.queued { color: var(--cp-text-muted); }
 @keyframes ck-blink { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) {
+  .ck.running .ck-ic { animation: none; }
+}
 
 .ck-fail { margin: 8px 0 12px; border: 1px solid #ff8182; border-radius: 6px; background: var(--cp-surface); overflow: hidden; }
 .ck-fail-head { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: #ffebe9; border-bottom: 1px solid #ff8182; }

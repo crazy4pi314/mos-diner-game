@@ -181,6 +181,7 @@ button { font: inherit; cursor: pointer; }
 .compose-box input {
   flex: 1; border: 0; outline: 0; background: transparent; color: var(--cp-text); font: inherit;
 }
+.compose-box input:focus-visible { outline: 2px solid var(--cp-text); outline-offset: 2px; border-radius: 2px; }
 .quick { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .qbtn {
   border: 1px solid var(--cp-border); background: var(--cp-surface); color: var(--cp-text);
@@ -417,15 +418,17 @@ code, .cmd {
 
 /* ---------- Win screen: expanded pink badge ---------- */
 .cert-overlay {
-  position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: 20; display: none; overflow: auto;
+  --cert-ink: #7d263f;
+  position: fixed; inset: 0; width: 100%; max-width: none; height: 100vh; height: 100dvh;
+  max-height: none; margin: 0; border: 0; z-index: 20; display: none; overflow: auto;
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   background: radial-gradient(circle at 50% 18%, var(--neon-pink), var(--cp-accent-hover) 72%);
 }
-.cert-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
-.cert-inner { width: min(660px, 100%); margin: 0 auto; text-align: center; flex: 0 0 auto; transform-origin: top center; }
+.cert-overlay:not(dialog).show, dialog.cert-overlay[open] { display: flex; align-items: flex-start; justify-content: center; }
+.cert-inner { width: min(660px, 100%); min-width: 0; margin: 0 auto; text-align: center; flex: 0 0 auto; overflow-wrap: anywhere; transform-origin: top center; }
 .certificate {
-  position: relative; color: var(--neon-pink); padding: 14px; border-radius: 36px; text-align: center;
+  position: relative; color: var(--cert-ink); padding: 14px; border-radius: 36px; text-align: center;
   border: 3px solid var(--neon-pink); background: var(--neon-pink-soft);
   font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -434,31 +437,34 @@ code, .cmd {
 }
 @keyframes slide-up { from { transform: translateY(40px); opacity: 0; } }
 .cert-frame { border: 2px solid var(--neon-pink); border-radius: 26px; padding: 22px 20px 18px; position: relative; }
-.cert-brand { display: block; width: clamp(240px, 78vw, 440px); height: auto; margin: 2px auto 0; }
+.cert-brand { display: block; width: clamp(240px, 78vw, 440px); max-width: 100%; height: auto; margin: 2px auto 0; }
 .cert-title {
   display: block; font-size: clamp(20px, 4.8vw, 28px); letter-spacing: 0.2em; font-weight: 700;
-  color: var(--neon-pink); margin: 2px 0 12px;
+  color: var(--cert-ink); margin: 2px 0 12px;
 }
-.cert-body { margin: 4px auto; max-width: 480px; font-size: 13px; line-height: 1.6; letter-spacing: 0.1em; }
+.cert-body { margin: 4px auto; max-width: 480px; font-size: 16px; line-height: 1.6; letter-spacing: 0.1em; }
 .cert-body b { font-weight: 700; }
 .cert-user { position: relative; margin: 2px auto 6px; }
 .cert-name {
   font-family: inherit; font-style: normal; font-weight: 700; font-size: clamp(20px, 5vw, 30px);
-  letter-spacing: 0.06em; color: var(--neon-pink); border-bottom: 2px solid var(--neon-pink);
+  letter-spacing: 0.06em; color: var(--cert-ink); border-bottom: 2px solid var(--neon-pink);
   display: block; width: 100%; min-width: 0; padding: 0 10px 4px; text-align: center; overflow-wrap: anywhere;
 }
 .cert-good {
   margin: 14px auto 6px; padding: 10px 14px; max-width: 440px; font-weight: 700; letter-spacing: 0.14em;
-  font-size: clamp(13px, 3.6vw, 16px); background: var(--neon-pink); color: var(--neon-pink-soft); border-radius: 8px;
+  font-size: 16px; background: var(--cert-ink); color: var(--neon-pink-soft); border-radius: 8px;
 }
-.cert-small { font-size: 11px; font-style: normal; letter-spacing: 0.08em; line-height: 1.55; margin: 12px auto 4px; max-width: 440px; }
-.cert-date { font-size: 12px; letter-spacing: 0.14em; margin-top: 10px; }
+.cert-small { font-size: 14px; font-style: normal; letter-spacing: 0.08em; line-height: 1.55; margin: 12px auto 4px; max-width: 440px; }
+.cert-date { font-size: 14px; letter-spacing: 0.14em; margin-top: 10px; }
 .cert-actions { margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .cert-actions .btn {
-  padding: 10px 18px; font-family: inherit; letter-spacing: 0.12em; text-transform: uppercase;
-  background: var(--neon-pink); color: var(--neon-pink-soft);
+  min-height: 44px; max-width: 100%; padding: 10px 18px; font-family: inherit; letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--neon-pink); color: #fff;
 }
-.cert-actions .btn:hover { background: var(--cp-accent-hover); color: var(--neon-pink-soft); }
+.cert-actions .btn:hover { background: var(--cert-ink); color: #fff; }
+.cert-actions .btn:focus-visible {
+  outline: 3px solid #fff; outline-offset: 3px; box-shadow: 0 0 0 6px var(--cert-ink);
+}
 @media (prefers-reduced-motion: reduce) {
   .certificate { animation: none; }
 }
@@ -743,6 +749,7 @@ html.tabbed .badge:not(:empty) { display: inline-grid; place-items: center; min-
 }
 @media (prefers-reduced-motion: reduce) {
   .lp, .sitter, .speech, .dish-food, .cash, .bstep, .step.flag { animation: none !important; }
+  .bstep.now .pr-st { animation: none; }
 }
 
 /* ---------- Food art ---------- */
