@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="16" viewBox="0 0 1280 16" role="img" aria-labelledby="title">
+  <title id="title">Mo's Diner pink checkerboard trim</title>
+  <defs>
+    <pattern id="checker" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path fill="#EEBCD7" d="M0 0h16v16H0z"/>
+      <path fill="#D5346B" d="M0 0h8v8H0zM8 8h8v8H8z"/>
+    </pattern>
+  </defs>
+  <path fill="url(#checker)" d="M0 0h1280v16H0z"/>
+</svg>

@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a menu, gameplay, or usability improvement
+about: Suggest a menu, gameplay, accessibility, or documentation improvement
 title: ""
 labels: ""
 assignees: ""
@@ -8,7 +8,7 @@ assignees: ""
 
 ## Player need
 
-What would this help players do?
+What would this help players or contributors do?
 
 ## Proposed change
 

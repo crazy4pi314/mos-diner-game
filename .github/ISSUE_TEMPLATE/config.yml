@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/crazy4pi314/mos-diner-game/security/advisories/new
+    about: Report suspected vulnerabilities privately, not in public issues.
+  - name: Installation and setup
+    url: https://github.com/crazy4pi314/mos-diner-game/blob/main/docs/INSTALL.md
+    about: Start here for GitHub Copilot app canvas setup and troubleshooting.
