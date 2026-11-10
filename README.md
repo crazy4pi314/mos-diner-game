@@ -1,6 +1,6 @@
-<img src="assets/mos-lockup.svg" alt="Mo's Diner: the pink script wordmark and outlined diner lettering from GitHub Universe" width="194">
+<img src="assets/mos-lockup.svg" alt="Mo's Diner: the pink script wordmark and outlined diner lettering from GitHub Universe" width="30%">
 
-# Good prompts. Green checks. Breakfast served.
+# Hungry Devs. Green checks. Breakfast served.
 
 Pull up a seat at **Mo's Diner**, a GitHub Universe-inspired game in the
 **GitHub Copilot app canvas**. You're working the counter; Copilot is your
