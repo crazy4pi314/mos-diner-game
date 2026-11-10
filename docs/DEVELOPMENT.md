@@ -77,6 +77,17 @@ always use the local deterministic parser.
 The canvas switches to tabs at 900px.
 CSS and game navigation use the same media query, including when the panel resizes.
 Short panels scroll game content and dialog bodies; the certificate scrolls to its replay button.
+
+Keyboard focus stays with the same Orders or Kitchen action when background
+updates redraw it, with a nearby fallback when that action disappears. Compact
+navigation exposes the current view and describes its order counts. Plan choices
+use one Tab stop per radio group; arrow keys and Home/End select a version without
+approving the plan.
+
+Winning shows the shift summary before opening the certificate as a native modal
+dialog. Its title receives focus, background controls are inert, and replay
+returns to the welcome/name field with the clock stopped. Certificate content
+reflows and scrolls rather than scaling text and controls down to fit.
 The prompt field has an inset-safe keyboard-focus outline using the theme's text
 color. Certificate copy uses dark rose on light pink (5.77:1); the replay button
 uses white on brand pink (4.63:1), or white on dark rose on hover (9.46:1), with a
